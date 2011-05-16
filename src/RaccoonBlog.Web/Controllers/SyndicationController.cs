@@ -73,7 +73,7 @@ namespace RaccoonBlog.Web.Controllers
 				             new XAttribute("version", "2.0"),
 				             new XElement("channel",
 				                          new XElement("title", GetBlogTitle()),
-				                          new XElement("link", Request.ApplicationPath),
+                                          new XElement("link", String.Format("{0}{1}", ConfigurationManager.AppSettings["MainUrl"], Request.ApplicationPath)),
 				                          new XElement("description", GetBlogTitle()),
 				                          new XElement("copyright", String.Format("{0} (c) {1}", GetBlogCopyright(), DateTime.Now.Year)),
 				                          new XElement("ttl", "60"),
