@@ -114,6 +114,13 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Routing\RoutingTestBase.cs" />
     <Compile Include="SlugConverterTests.cs" />
+    <Compile Include="Web\Areas\Admin\Helpers\TestingHtmlHelperExtensions\AdminImage\WhenTheWebSiteIsAnApplication.cs" />
+    <Compile Include="Web\Areas\Admin\Helpers\TestingHtmlHelperExtensions\AdminImage\WhenTheWebSiteIsInTheRoot.cs" />
+    <Compile Include="Web\Areas\Admin\Helpers\TestingHtmlHelperExtensions\AdminScript\WhenTheWebSiteIsAnApplication.cs" />
+    <Compile Include="Web\Areas\Admin\Helpers\TestingHtmlHelperExtensions\AdminScript\WhenTheWebSiteIsInTheRoot.cs" />
+    <Compile Include="Web\Areas\Admin\Helpers\TestingHtmlHelperExtensions\AdminStyle\WhenTheWebSiteIsAnApplication.cs" />
+    <Compile Include="Web\Areas\Admin\Helpers\TestingHtmlHelperExtensions\AdminStyle\WhenTheWebSiteIsInTheRoot.cs" />
+    <Compile Include="Web\Areas\Admin\Helpers\TestingHtmlHelperExtensions\WhenTestingTheClass.cs" />
     <Compile Include="Web\Services\PostSchedulingStrategyTests.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -129,6 +136,7 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
