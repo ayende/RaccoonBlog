@@ -25,6 +25,7 @@ namespace RaccoonBlog.Web.Infrastructure.AutoMapper
 
 			Mapper.AddProfile(new UserAdminMapperProfile());
 			Mapper.AddProfile(new PostsAdminViewModelMapperProfile());
+            Mapper.AddProfile(new BlogConfigMapperProfile());
 		}
 	}
 }
