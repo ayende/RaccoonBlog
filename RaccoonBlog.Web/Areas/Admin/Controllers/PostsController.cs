@@ -70,9 +70,6 @@ namespace RaccoonBlog.Web.Areas.Admin.Controllers
 				post.PublishAt = postScheduleringStrategy.Schedule();
 			}
 
-			// Actually save the post now
-			RavenSession.Store(post);
-
 			if (input.IsNewPost())
 			{
 				// Create the post comments object and link between it and the post
@@ -88,7 +85,11 @@ namespace RaccoonBlog.Web.Areas.Admin.Controllers
 				};
 
 				RavenSession.Store(comments);
+                post.CommentsId = comments.Id;
 			}
+
+            // Actually save the post now
+            RavenSession.Store(post);
 
 			return RedirectToAction("Details", new { Id = post.MapTo<PostReference>().DomainId });
 		}
