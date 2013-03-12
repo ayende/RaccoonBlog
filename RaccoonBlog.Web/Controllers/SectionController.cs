@@ -124,7 +124,7 @@ namespace RaccoonBlog.Web.Controllers
 			return View(vm);
 		}
 
-		protected override TimeSpan CahceDuration
+		protected override TimeSpan CacheDuration
 		{
 			get { return TimeSpan.FromMinutes(6); }
 		}

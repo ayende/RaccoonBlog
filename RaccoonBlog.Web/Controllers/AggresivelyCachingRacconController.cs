@@ -11,10 +11,10 @@ namespace RaccoonBlog.Web.Controllers
 		{
 			base.OnActionExecuting(filterContext);
 
-			aggressivelyCacheFor = RavenSession.Advanced.DocumentStore.AggressivelyCacheFor(CahceDuration);
+			aggressivelyCacheFor = RavenSession.Advanced.DocumentStore.AggressivelyCacheFor(CacheDuration);
 		}
 
-		protected abstract TimeSpan CahceDuration { get; }
+		protected abstract TimeSpan CacheDuration { get; }
 
 		protected override void OnActionExecuted(ActionExecutedContext filterContext)
 		{

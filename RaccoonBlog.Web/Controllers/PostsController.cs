@@ -89,7 +89,7 @@ namespace RaccoonBlog.Web.Controllers
 			});
 		}
 
-		protected override TimeSpan CahceDuration
+		protected override TimeSpan CacheDuration
 		{
 			get { return TimeSpan.FromMinutes(3); }
 		}
