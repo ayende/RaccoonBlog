@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
 using HibernatingRhinos.Loci.Common.Tasks;
+using NLog;
 using RaccoonBlog.Web.Helpers;
 using RaccoonBlog.Web.Helpers.Validation;
 using RaccoonBlog.Web.Infrastructure.AutoMapper;
@@ -20,6 +21,8 @@ namespace RaccoonBlog.Web.Controllers
 {
     public partial class PostDetailsController : RaccoonController
     {
+        private static Logger _log = LogManager.GetCurrentClassLogger();
+
         public virtual ActionResult Details(string id, string slug, Guid key)
         {
             var post = RavenSession
@@ -193,17 +196,21 @@ namespace RaccoonBlog.Web.Controllers
             }
 
             var cookie = Request.Cookies[CommenterUtil.CommenterCookieName];
+            _log.Debug("Cookie '" + CommenterUtil.CommenterCookieName + "': " + cookie);
+
             if (cookie == null) return;
 
             var commenter = RavenSession.GetCommenter(cookie.Value);
             if (commenter == null)
             {
+                _log.Debug("Could not find commenter for '" + CommenterUtil.CommenterCookieName + "': " + cookie.Value);
                 vm.IsLoggedInCommenter = false;
                 Response.Cookies.Set(new HttpCookie(CommenterUtil.CommenterCookieName) { Expires = DateTime.Now.AddYears(-1) });
                 return;
             }
 
             vm.IsLoggedInCommenter = string.IsNullOrWhiteSpace(commenter.OpenId) == false;
+            _log.Debug("Commenter OpenId: " + commenter.OpenId);
             vm.Input = commenter.MapTo<CommentInput>();
             vm.IsTrustedCommenter = commenter.IsTrustedCommenter == true;
         }
