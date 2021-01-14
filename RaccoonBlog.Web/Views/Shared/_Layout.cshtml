@@ -14,7 +14,27 @@
     <meta name="msapplication-TileColor" content="#FB9D48">
     <meta name="theme-color" content="#FB9D48">
 
-    
+    @{ 
+        var banners = new List<Banner>
+        {
+            new Banner {ResourceUrl = "https://ravendb.net", ImageSrc = "\\Content\\css\\img\\banners\\ravendb-51.png", AltText = "RavenDB 5.1"},
+            new Banner {ResourceUrl = "https://ravendb.net/bootcamp", ImageSrc = "\\Content\\css\\img\\banners\\bootcamp-banner.png", AltText = "RavenDB Bootcamp"},
+            new Banner {ResourceUrl = "https://workshops.ravendb.net", ImageSrc = "\\Content\\css\\img\\banners\\rdb-basics.png", AltText = "Workshop Online - RavenDB Basics"},
+            new Banner {ResourceUrl = "https://workshops.ravendb.net", ImageSrc = "\\Content\\css\\img\\banners\\advanced-rdb.png", AltText = "Workshop Online - Advanced RavenDB"},
+            new Banner {ResourceUrl = "https://workshops.ravendb.net", ImageSrc = "\\Content\\css\\img\\banners\\rdb-at-scale.png", AltText = "Workshop Online - RavenDB at Scale"},
+            new Banner {ResourceUrl = "https://workshops.ravendb.net", ImageSrc = "\\Content\\css\\img\\banners\\best-practices-and-performance.png", AltText = "Workshop Online - Best Practices and Performance"},
+            new Banner {ResourceUrl = "https://www.producthunt.com/posts/entity-framework-profiler", ImageSrc = "\\Content\\css\\img\\banners\\producthunt-efprof.png", AltText = "Entity Framework Profiler Calls for Your Review"},
+            new Banner {ResourceUrl = "https://www.producthunt.com/posts/nhibernate-profiler", ImageSrc = "\\Content\\css\\img\\banners\\producthunt-nhprof.png", AltText = "NHibernate Profiler Calls for Your Review"},
+            new Banner {ResourceUrl = "https://ravendb.net/user-review", ImageSrc = "\\Content\\css\\img\\banners\\trustradius.png", AltText = "Leave a Review of RavenDB on TrustRadius and Get a $20 Amazon Gift Card"},
+        };
+
+        var random = new Random();
+        int index = random.Next(banners.Count);
+
+        var bannerToDisplay = banners[index];
+
+    }
+
     @if (ViewBag.BlogConfig.MetaDescription != null)
     {
         <meta name="description" content="@ViewBag.BlogConfig.MetaDescription">
@@ -36,6 +56,7 @@
     @Html.RenderTheme(ViewBag.BlogConfig.CustomCss as string)
     @RenderSection("Style", false)
 </head>
+
 <body class="show-grid">
     @{
         var containerClass = "body-container";
@@ -45,108 +66,104 @@
         }
     }
     <div class="@containerClass">
-            <div class="leftSide">
-                <header>
-                    <a href="@Url.Action("Index", "Posts")" class="logo">
-                        <h1>@ViewBag.BlogConfig.Title</h1>
-                    </a>
-                    <button class="menu-button" id="open-button"><i class="icomoon-position icon-arrow-down hide-sm" aria-hidden="true"></i></button>
-                </header>
-                <!--<a href="@Url.Action("Index", "Posts")" style="display: block;"><img src="~/Content/css/img/rihno.svg" class="rihno" /></a>-->
-
-                <a href="@Url.Action("Index", "Posts")" class="logo-vertical">
+        <div class="leftSide">
+            <header>
+                <a href="@Url.Action("Index", "Posts")" class="logo">
                     <h1>@ViewBag.BlogConfig.Title</h1>
                 </a>
-                
-                <button class="menu-enlarge" id="enlarge-button"><i class="icomoon-position icon-circle-arrow-left hide-sm" aria-hidden="true"></i></button>
-                <div class="collapseMobile flex-grow flex-vertical">
-                    <div class="about flex-grow @(ViewBag.IsHomePage ? "home" : string.Empty)">
-                        @Html.RenderSection("Contact Me")
-                    </div>
-                    <div class="flex-grow"></div>
-                    <div class="rewards margin-top">
-                        <a class="mvp-profile-vertical" href="https://mvp.microsoft.com/en-us/PublicProfile/4012807" title="Microsoft MVP Reconnect Oren Eini" target="_blank"></a>
-                    </div>
-                    <div class="pull-down">
-                        <p class="icomoon">
-                            @if (ViewBag.BlogConfig.RssLogin != null)
-                            {
-                                <a href="@string.Format("http://feeds.feedburner.com/{0}", ViewBag.BlogConfig.RssLogin)" class="icon-rss">&#x20;</a>
-                            }
-                            @if (ViewBag.BlogConfig.OwnerEmail != null)
-                            {
-                                <a href="@string.Format("mailto:{0}", ViewBag.BlogConfig.OwnerEmail)" class="icon-mail"></a>
-                            }
-                            @if (ViewBag.BlogConfig.GithubLogin != null)
-                            {
-                                <a href="@string.Format("https://github.com/{0}", ViewBag.BlogConfig.GithubLogin)" class="icon-github"></a>
-                            }
-                            @if (ViewBag.BlogConfig.TwitterLogin != null)
-                            {
-                                <a href="@string.Format("https://twitter.com/{0}", ViewBag.BlogConfig.TwitterLogin)" class="icon-twitter"></a>
-                            }
-                            @if (ViewBag.BlogConfig.FacebookLogin != null)
-                            {
-                                <a href="@string.Format("https://www.facebook.com/{0}", ViewBag.BlogConfig.FacebookLogin)" class="icon-facebook"></a>
-                            }
-                            @if (ViewBag.BlogConfig.LinkedInLogin != null)
-                            {
-                                <a href="@string.Format("https://www.linkedin.com/in/{0}", ViewBag.BlogConfig.LinkedInLogin)" class="icon-linkedin"></a>
-                            }
-                        </p>
-                        @Html.RenderSection("Stats")
-                        <p class="copyright">@ViewBag.BlogConfig.Copyright</p>
-                    </div>
-                </div>
-            </div>
-            <div id="content" class="centerCol flex-grow">
-                <header class="body-header">
-                    <div class="search">
-                        @using (Html.BeginForm("SearchResult", "Search", FormMethod.Get))
-                        {
-                            <input name="q" type="search" placeholder="search" class="form-control" value="@ViewBag.SearchTerm" />
-                            <input type="submit" />
-                        }
-                    </div>
-                    <div style="display:inline-block">
-                        @if (Html.IsSectionActive("Tags"))
-                        {
-                            <a href="#" id="tags-button">
-                                <span class="icomoon-position icon-tags" aria-hidden="true"></span> filter by tags
-                            </a>
-                        }
-                        @if (Html.IsSectionActive("Archive"))
-                        {
-                            <a href="#" id="archive-button">
-                                <span class="icomoon-position icon-archive" aria-hidden="true"></span> archive
-                            </a>
-                        }
-                    </div>
-                    <nav class="pull-right views @(ViewBag.ChangeViewStyle == null ? "hide" : "")">
-                        <a href="#" class="stackView" id="stackView">stack view</a>
-                        <a href="#" class="gridView active" id="gridView">grid view</a>
-                    </nav>
+                <button class="menu-button" id="open-button"><i class="icomoon-position icon-arrow-down hide-sm" aria-hidden="true"></i></button>
+            </header>
+            <!--<a href="@Url.Action("Index", "Posts")" style="display: block;"><img src="~/Content/css/img/rihno.svg" class="rihno" /></a>-->
 
-                    <div class="clearfix"></div>
-                    @Html.RenderSection("Tags")
-                    @Html.RenderSection("Archive")
-                </header>
-                <div class="banner">
-                    <a href="https://ravendb.net" target="_blank">
-                        <img src="~/Content/css/img/banners/ravendb-51.png" 
-                            class="img-responsive img-center"
-                            alt="RavenDB 5.1 Available Now" />
-                    </a>
+            <a href="@Url.Action("Index", "Posts")" class="logo-vertical">
+                <h1>@ViewBag.BlogConfig.Title</h1>
+            </a>
+
+            <button class="menu-enlarge" id="enlarge-button"><i class="icomoon-position icon-circle-arrow-left hide-sm" aria-hidden="true"></i></button>
+            <div class="collapseMobile flex-grow flex-vertical">
+                <div class="about flex-grow @(ViewBag.IsHomePage ? "home" : string.Empty)">
+                    @Html.RenderSection("Contact Me")
                 </div>
-                @RenderBody()
+                <div class="flex-grow"></div>
+                <div class="rewards margin-top">
+                    <a class="mvp-profile-vertical" href="https://mvp.microsoft.com/en-us/PublicProfile/4012807" title="Microsoft MVP Reconnect Oren Eini" target="_blank"></a>
+                </div>
+                <div class="pull-down">
+                    <p class="icomoon">
+                        @if (ViewBag.BlogConfig.RssLogin != null)
+                        {
+                            <a href="@string.Format("http://feeds.feedburner.com/{0}", ViewBag.BlogConfig.RssLogin)" class="icon-rss">&#x20;</a>
+                        }
+                        @if (ViewBag.BlogConfig.OwnerEmail != null)
+                        {
+                            <a href="@string.Format("mailto:{0}", ViewBag.BlogConfig.OwnerEmail)" class="icon-mail"></a>
+                        }
+                        @if (ViewBag.BlogConfig.GithubLogin != null)
+                        {
+                            <a href="@string.Format("https://github.com/{0}", ViewBag.BlogConfig.GithubLogin)" class="icon-github"></a>
+                        }
+                        @if (ViewBag.BlogConfig.TwitterLogin != null)
+                        {
+                            <a href="@string.Format("https://twitter.com/{0}", ViewBag.BlogConfig.TwitterLogin)" class="icon-twitter"></a>
+                        }
+                        @if (ViewBag.BlogConfig.FacebookLogin != null)
+                        {
+                            <a href="@string.Format("https://www.facebook.com/{0}", ViewBag.BlogConfig.FacebookLogin)" class="icon-facebook"></a>
+                        }
+                        @if (ViewBag.BlogConfig.LinkedInLogin != null)
+                        {
+                            <a href="@string.Format("https://www.linkedin.com/in/{0}", ViewBag.BlogConfig.LinkedInLogin)" class="icon-linkedin"></a>
+                        }
+                    </p>
+                    @Html.RenderSection("Stats")
+                    <p class="copyright">@ViewBag.BlogConfig.Copyright</p>
+                </div>
             </div>
-            <section class="rightSide">
-                @if (HttpContext.Current.Request.IsAuthenticated)
-                {
-                    @Html.Action(MVC.Section.ActionNames.AdministrationPanel, MVC.Section.Name)
-                }
-                @{Html.RenderAction(MVC.Section.ActionNames.List, MVC.Section.Name);}
-            </section>
+        </div>
+        <div id="content" class="centerCol flex-grow">
+            <header class="body-header">
+                <div class="search">
+                    @using (Html.BeginForm("SearchResult", "Search", FormMethod.Get))
+                    {
+                        <input name="q" type="search" placeholder="search" class="form-control" value="@ViewBag.SearchTerm" />
+                        <input type="submit" />
+                    }
+                </div>
+                <div style="display:inline-block">
+                    @if (Html.IsSectionActive("Tags"))
+                    {
+                        <a href="#" id="tags-button">
+                            <span class="icomoon-position icon-tags" aria-hidden="true"></span> filter by tags
+                        </a>
+                    }
+                    @if (Html.IsSectionActive("Archive"))
+                    {
+                        <a href="#" id="archive-button">
+                            <span class="icomoon-position icon-archive" aria-hidden="true"></span> archive
+                        </a>
+                    }
+                </div>
+                <nav class="pull-right views @(ViewBag.ChangeViewStyle == null ? "hide" : "")">
+                    <a href="#" class="stackView" id="stackView">stack view</a>
+                    <a href="#" class="gridView active" id="gridView">grid view</a>
+                </nav>
+
+                <div class="clearfix"></div>
+                @Html.RenderSection("Tags")
+                @Html.RenderSection("Archive")
+            </header>
+            <div class="banner">
+                <a href="@bannerToDisplay.ResourceUrl" target="_blank"><img src="@bannerToDisplay.ImageSrc" class="img-responsive img-center" title="@bannerToDisplay.AltText" alt="@bannerToDisplay.AltText" /></a>
+            </div>
+            @RenderBody()
+        </div>
+        <section class="rightSide">
+            @if (HttpContext.Current.Request.IsAuthenticated)
+            {
+                @Html.Action(MVC.Section.ActionNames.AdministrationPanel, MVC.Section.Name)
+            }
+            @{Html.RenderAction(MVC.Section.ActionNames.List, MVC.Section.Name);}
+        </section>
     </div>
 
     @if (IsSectionDefined("Script"))
@@ -174,8 +191,8 @@
                     ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
                     var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
                 })();
-            </script>}
+            </script>
+}
     }
 </body>
-
 </html>
