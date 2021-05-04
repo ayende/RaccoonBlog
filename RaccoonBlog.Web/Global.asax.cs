@@ -90,7 +90,8 @@ namespace RaccoonBlog.Web
 	        if (DocumentStore != null) return; // prevent misuse
 
 	        ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-	        ServicePointManager.ServerCertificateValidationCallback += OnServerCertificateCustomValidationCallback;
+            ServicePointManager.CheckCertificateRevocationList = false;
+            ServicePointManager.ServerCertificateValidationCallback += OnServerCertificateCustomValidationCallback;
 
 	        var urls = WebConfigurationManager.AppSettings["Raven/Urls"];
 	        var database = WebConfigurationManager.AppSettings["Raven/Database"];
