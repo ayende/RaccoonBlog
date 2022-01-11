@@ -549,9 +549,8 @@
     <Content Include="Content\css\fullcalendar.css" />
     <Content Include="Content\css\fullcalendar.min.css" />
     <Content Include="Content\css\fullcalendar.print.css" />
-    <Content Include="Content\css\img\banners\christmas.jpg" />
     <Content Include="Content\css\img\banners\couchbase-vs-ravendb-whitepaper.png" />
-    <Content Include="Content\css\img\banners\ravendb-52.png" />
+    <Content Include="Content\css\img\banners\ravendb-53.png" />
     <Content Include="Content\css\img\banners\workshops-ravendb.png" />
     <Content Include="Content\css\img\commentPreviewDate.png" />
     <Content Include="Content\css\img\error.png" />
