@@ -93,10 +93,10 @@
       <Version>3.0.100</Version>
     </PackageReference>
     <PackageReference Include="RavenDB.Client">
-      <Version>4.2.117</Version>
+      <Version>4.2.121-nightly-20220307-1432</Version>
     </PackageReference>
     <PackageReference Include="RavenDB.TestDriver">
-      <Version>4.2.117</Version>
+      <Version>4.2.121-nightly-20220307-1432</Version>
     </PackageReference>
     <PackageReference Include="RedditSharp">
       <Version>1.1.14</Version>
