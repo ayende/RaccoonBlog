@@ -2,25 +2,48 @@
     Layout = "";
 }
 @{
-    const string fullName = "Oren Eini";
     const string email = "oren@ravendb.net";
     const string phone = "+972 52-548-6969";
 }
 <img src="~/Content/images/oren.jpg" class="oren-photo img-center" />
-<div class="margin-top text-center">
-    <span>@fullName</span> <span>aka Ayende Rahien</span>
-    <span>
-        CEO of <a href="http://www.hibernatingrhinos.com/" class="about-link" target="_blank"><strong> Hibernating Rhinos LTD</strong></a>,
-        which develops <a href="http://ravendb.net/" class="about-link" target="_blank"><strong>RavenDB</strong></a>,
-        a NoSQL Open Source Document Database.
-    </span>
+<div class="margin-top margin-bottom text-center">
+    <h2>CEO of RavenDB</h2>
+    <span class="lead">a NoSQL Open Source Document Database</span>
     <div class="rewards margin-top">
         <a class="mvp-profile-horizontal" href="https://mvp.microsoft.com/en-us/PublicProfile/4012807" title="Microsoft MVP Reconnect Oren Eini" target="_blank" rel="nofollow"><img src="~/Content/css/img/mvp-horizontal.svg"/></a>
-        <a class="dzone-profile-horizontal" href="https://dzone.com/users/750579/ayende.html" title="DZone 2020 Hall of Fame Award Winner" target="_blank" rel="nofollow"><img src="~/Content/css/img/dzone-horizontal.svg" /></a>
+        <a class="dzone-profile-horizontal" href="https://dzone.com/users/750579/ayende.html" title="DZone 2020 Hall of Fame Award Winner" target="_blank" rel="nofollow"><img src="~/Content/css/img/dzone-horizontal.svg"/></a>
     </div>
 </div>
-<div class="about-info margin-top">
-    <p class="text-center">Get in touch with me:</p>
-    <p class="mail"><img src="~/Content/css/img/ico_mail.svg" class="icon-about" /><a href="@string.Format("mailto:{0}", email)">@email</a></p>
-    <p class="phone"><img src="~/Content/css/img/ico_phone.svg" class="icon-about" />@phone</p>
+<div class="margin-top text-center">
+    <p>Get in touch with me:</p>
+    <div class="d-flex flex-wrap justify-content-center gap-3">
+        <small class="mail"><img src="~/Content/css/img/ico_mail.svg" class="icon-about" /><a href="@string.Format("mailto:{0}", email)">@email</a></small>
+        <small class="phone"><img src="~/Content/css/img/ico_phone.svg" class="icon-about" />@phone</small>
+    </div>
+    <p class="d-flex gap-5 justify-content-center flex-wrap icomoon margin-top">
+        @if (ViewBag.BlogConfig.TwitterLogin != null)
+        {
+            <a href="@string.Format("https://twitter.com/{0}", ViewBag.BlogConfig.TwitterLogin)" class="icon-twitter"></a>
+        }
+        @if (ViewBag.BlogConfig.GithubLogin != null)
+        {
+            <a href="@string.Format("https://github.com/{0}", ViewBag.BlogConfig.GithubLogin)" class="icon-github"></a>
+        }
+        @if (ViewBag.BlogConfig.OwnerEmail != null)
+        {
+            <a href="@string.Format("mailto:{0}", ViewBag.BlogConfig.OwnerEmail)" class="icon-mail"></a>
+        }
+        @if (ViewBag.BlogConfig.LinkedInLogin != null)
+        {
+            <a href="@string.Format("https://www.linkedin.com/in/{0}", ViewBag.BlogConfig.LinkedInLogin)" class="icon-linkedin"></a>
+        }
+        @if (ViewBag.BlogConfig.FacebookLogin != null)
+        {
+            <a href="@string.Format("https://www.facebook.com/{0}", ViewBag.BlogConfig.FacebookLogin)" class="icon-facebook"></a>
+        }
+        @if (ViewBag.BlogConfig.RssLogin != null)
+        {
+            <a href="@string.Format("http://feeds.feedburner.com/{0}", ViewBag.BlogConfig.RssLogin)" class="icon-rss">&#x20;</a>
+        }
+    </p>
 </div>

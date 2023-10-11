@@ -571,6 +571,7 @@
     <Content Include="Content\css\img\readmore.png" />
     <Content Include="Content\css\img\readmore2.png" />
     <Content Include="Content\css\img\right-corner.png" />
+    <Content Include="Content\css\img\new-bg.svg" />
     <Content Include="Content\css\img\rihno.svg" />
     <Content Include="Content\css\img\rss.png" />
     <Content Include="Content\css\img\search-icon.svg" />

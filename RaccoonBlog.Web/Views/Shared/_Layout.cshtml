@@ -64,17 +64,18 @@
         <div class="leftSide">
             <header>
                 <a href="@Url.Action("Index", "Posts")" class="logo">
-                    <h1>@ViewBag.BlogConfig.Title</h1>
+                    <h1>Oren Eini</h1>
+                    <span class="lead">aka Ayende Rahien</span>
                 </a>
-                <button class="menu-button" id="open-button"><i class="icomoon-position icon-arrow-down hide-sm" aria-hidden="true"></i></button>
+                <button class="menu-button" id="open-button"><i class="icon-arrow-down hide-sm" aria-hidden="true"></i></button>
             </header>
             <!--<a href="@Url.Action("Index", "Posts")" style="display: block;"><img src="~/Content/css/img/rihno.svg" class="rihno" /></a>-->
 
             <a href="@Url.Action("Index", "Posts")" class="logo-vertical">
-                <h1>@ViewBag.BlogConfig.Title</h1>
+                <h1>Oren Eini</h1>
             </a>
 
-            <button class="menu-enlarge" id="enlarge-button"><i class="icomoon-position icon-circle-arrow-left hide-sm" aria-hidden="true"></i></button>
+            <button class="menu-enlarge" id="enlarge-button"><i class="icon-circle-arrow-left hide-sm" aria-hidden="true"></i></button>
             <div class="collapseMobile flex-grow">
                 <div class="about flex-grow @(ViewBag.IsHomePage ? "home" : string.Empty)">
                     @Html.RenderSection("Contact Me")
@@ -85,36 +86,11 @@
                     <a class="dzone-profile-vertical" href="https://dzone.com/users/750579/ayende.html" title="DZone 2020 Hall of Fame Award Winner" target="_blank" rel="nofollow"><img src="~/Content/css/img/dzone-vertical.svg" /></a>
                 </div>
                 <div class="pull-down">
-                    <p class="icomoon">
-                        @if (ViewBag.BlogConfig.RssLogin != null)
-                        {
-                            <a href="@string.Format("http://feeds.feedburner.com/{0}", ViewBag.BlogConfig.RssLogin)" class="icon-rss">&#x20;</a>
-                        }
-                        @if (ViewBag.BlogConfig.OwnerEmail != null)
-                        {
-                            <a href="@string.Format("mailto:{0}", ViewBag.BlogConfig.OwnerEmail)" class="icon-mail"></a>
-                        }
-                        @if (ViewBag.BlogConfig.GithubLogin != null)
-                        {
-                            <a href="@string.Format("https://github.com/{0}", ViewBag.BlogConfig.GithubLogin)" class="icon-github"></a>
-                        }
-                        @if (ViewBag.BlogConfig.TwitterLogin != null)
-                        {
-                            <a href="@string.Format("https://twitter.com/{0}", ViewBag.BlogConfig.TwitterLogin)" class="icon-twitter"></a>
-                        }
-                        @if (ViewBag.BlogConfig.FacebookLogin != null)
-                        {
-                            <a href="@string.Format("https://www.facebook.com/{0}", ViewBag.BlogConfig.FacebookLogin)" class="icon-facebook"></a>
-                        }
-                        @if (ViewBag.BlogConfig.LinkedInLogin != null)
-                        {
-                            <a href="@string.Format("https://www.linkedin.com/in/{0}", ViewBag.BlogConfig.LinkedInLogin)" class="icon-linkedin"></a>
-                        }
-                    </p>
                     @Html.RenderSection("Stats")
                     <p class="copyright">Copyright ©️ Ayende Rahien 2004 — @DateTime.Now.Year.ToString()</p>
-                    <a href="@Url.Action("Index", "privacy-policy")" class="legal-link">Privacy Policy</a>
-                    <a href="@Url.Action("Index", "terms")" class="legal-link">Terms</a>
+                    <small class="text-muted"><a href="@Url.Action("Index", "privacy-policy")" class="legal-link">Privacy Policy</a></small>
+                    <span class="separator margin-left-sm margin-right-sm">·</span>
+                    <small class="text-muted"><a href="@Url.Action("Index", "terms")" class="legal-link">Terms</a></small>
                 </div>
             </div>
         </div>
