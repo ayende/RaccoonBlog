@@ -582,7 +582,7 @@
     <Content Include="Content\css\fullcalendar.print.css" />
     <Content Include="Content\css\img\banners\ravendb-vs-mongodb.jpg" />
     <Content Include="Content\css\img\banners\couchbase-vs-ravendb-whitepaper.png" />
-    <Content Include="Content\css\img\banners\ravendb-62.jpg" />
+    <Content Include="Content\css\img\banners\ravendb.jpg" />
     <Content Include="Content\css\img\banners\workshops-ravendb.png" />
     <Content Include="Content\css\img\banners\webinars-ravendb.png" />
     <Content Include="Content\css\img\commentPreviewDate.png" />
