@@ -8,7 +8,6 @@ using System.Web.Mvc;
 using HibernatingRhinos.Loci.Common.Tasks;
 using NLog;
 using RaccoonBlog.Web.Helpers;
-using RaccoonBlog.Web.Helpers.Validation;
 using RaccoonBlog.Web.Infrastructure.AutoMapper;
 using RaccoonBlog.Web.Infrastructure.AutoMapper.Profiles.Resolvers;
 using RaccoonBlog.Web.Infrastructure.Common;
@@ -16,6 +15,7 @@ using RaccoonBlog.Web.Infrastructure.Indexes;
 using RaccoonBlog.Web.Infrastructure.Tasks;
 using RaccoonBlog.Web.Models;
 using RaccoonBlog.Web.ViewModels;
+using Raven.Client.Documents;
 
 namespace RaccoonBlog.Web.Controllers
 {
@@ -38,6 +38,14 @@ namespace RaccoonBlog.Web.Controllers
 
             SeriesInfo seriesInfo = GetSeriesInfo(post.Title);
 
+            var related = RavenSession.Query<Posts_ByVector.Query, Posts_ByVector>()
+                .Where(p => p.PublishAt < DateTimeOffset.Now.AsMinutes())
+                .VectorSearch(x => x.WithField(p => p.Vector), x => x.ForDocument(post.Id))
+                .Take(3)
+                .Skip(1) // skip the current post, always the best match :-)
+                .Select(p => new PostReference { Id = p.Id, Title = p.Title })
+                .ToList();
+
             var comments = RavenSession.Load<PostComments>(post.CommentsId) ?? new PostComments();
             var vm = new PostViewModel
             {
@@ -48,7 +56,8 @@ namespace RaccoonBlog.Web.Controllers
                 NextPost = RavenSession.GetNextPrevPost(post, true),
                 PreviousPost = RavenSession.GetNextPrevPost(post, false),
                 AreCommentsClosed = comments.AreCommentsClosed(post, BlogConfig.NumberOfDayToCloseComments),
-                SeriesInfo = seriesInfo
+                SeriesInfo = seriesInfo,
+                Related = related
             };
 
             vm.Post.Author = RavenSession.Load<User>(post.AuthorId).MapTo<PostViewModel.UserDetails>();

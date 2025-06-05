@@ -75,6 +75,19 @@
             time to read <strong class="force">@timeToRead.TimeToReadInMinutes min</strong> | <strong class="force">@timeToRead.WordCount words</strong>
         </div>
     </div>
+    <div class="related_posts pull-right-lg">
+            <span class="icomoon-position icon-tag" aria-hidden="true"></span> Related:
+            <ul>
+                @foreach (var related in Model.Related)
+                {
+                    <li>
+                        <a class="pull-left" href="@Url.Post(related.DomainId, related.Slug)">
+                            @related.Title
+                        </a>
+                    </li>
+                }
+            </ul>
+    </div>
     <hr />
     <div class="articleContent clearfix">
         <div class="text-wrapper">

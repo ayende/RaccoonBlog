@@ -19,6 +19,8 @@ namespace RaccoonBlog.Web.ViewModels
         public bool IsTrustedCommenter { get; set; }
         public bool IsLoggedInCommenter { get; set; }
 
+        public List<PostReference> Related { get; set; }
+
         public class Comment
         {
             public int Id { get; set; }
