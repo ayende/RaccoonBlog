@@ -6,7 +6,12 @@ namespace RaccoonBlog.Web.Models
 {
 	public class PostComments
 	{
-		public string Id { get; set; }
+        public PostComments()
+        {
+            Comments = new List<Comment>();
+			Spam = new List<Comment>();
+        }
+        public string Id { get; set; }
 		public PostReference Post { get; set; }
 		
 		public List<Comment> Comments { get; set; }
