@@ -592,6 +592,7 @@
     <Content Include="Content\css\img\banners\native-ai.png" />
     <Content Include="Content\css\img\commentPreviewDate.png" />
     <Content Include="Content\css\img\error.png" />
+    <Content Include="Content\css\img\article.svg" />
     <Content Include="Content\css\img\ico_grid_active.svg" />
     <Content Include="Content\css\img\ico_grid_inactive.svg" />
     <Content Include="Content\css\img\ico_mail.svg" />
