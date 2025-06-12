@@ -884,8 +884,6 @@ article {
                     margin-right: 5px;
                 }
 
-
-
                 ul {
                     margin: 0;
                     padding: 0;
@@ -957,6 +955,53 @@ article {
                             width: 40px;
                             margin-left: 10px;
                         }
+                    }
+                }
+            }
+        }
+        
+        .related-posts {
+            margin: @grid-gutter-width 0;
+
+            .related-posts_heading {
+                display: flex;
+                align-items: center;
+                gap: @grid-gutter-width/3;
+            }
+            
+            .related-posts_items {
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: @grid-gutter-width/3;
+                
+                @media (min-width: @screen-md-min) {
+                    grid-template-columns: 1fr 1fr 1fr;
+                    gap: @grid-gutter-width/2;
+                }
+                
+                .related-posts_item {
+                    background-color: #f9f5f0;
+                    border: 1px solid #efe8dc;
+                    padding: @grid-gutter-width/2;
+                    font-size: 1rem;
+                    transition: all .2s ease-in-out;
+                    border-radius: 7.08px;
+                    background-image: url(../img/article.svg);
+                    background-repeat: no-repeat;
+                    background-size: 36px;
+                    background-blend-mode: soft-light;
+                    background-position-y: bottom;
+                    background-position-x: right;
+
+                    @media (min-width: @screen-md-min) {
+                        background-size: 64px;
+                        font-size: 1.313rem;
+                        padding: @grid-gutter-width;
+                    }
+                    
+                    &:hover {
+                        background-color: #efe8dc;
+                        transition: none;
                     }
                 }
             }
@@ -2404,9 +2449,6 @@ li.future {
     }
 
     @media (min-width: @screen-sm) {
-
-
-
         .leftSide {
             width: 100px;
             text-align: center;
@@ -2428,8 +2470,6 @@ li.future {
         .logo-vertical {
             display: block !important;
         }
-
-
 
         .icomoon {
             a + a {
