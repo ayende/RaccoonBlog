@@ -25,7 +25,7 @@ namespace RaccoonBlog.Web.Infrastructure.Indexes
                            where post.PublishAt != null
                            select new
                            {
-                               Vector = new[] { LoadVector("Body", "posts"), LoadVector("Body", "posts") },
+                               Vector = LoadVector("Body", "postsbyvector"),
                                PublishAt = post.PublishAt,
                            };
         }
