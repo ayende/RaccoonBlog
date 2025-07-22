@@ -119,7 +119,7 @@
             @foreach (var related in Model.Related)
             {
                 <a class="related-posts_item" href="@Url.Post(related.DomainId, related.Slug)">
-                    @related.Title
+                    @Html.Raw(@related.Title)
                 </a>
             }
         </div>
