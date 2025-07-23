@@ -32,6 +32,8 @@ namespace RaccoonBlog.Web.Infrastructure.AutoMapper.Profiles
 			CreateMap<Post, PostReference>()
 				.ForMember(x => x.Title, o => o.MapFrom(m => HttpUtility.HtmlDecode(m.Title)))
 				.ForMember(x => x.Slug, o => o.Ignore())
+				.ForMember(x => x.PublishedAt, o => o.MapFrom(m => m.PublishAt))
+				.ForMember(x => x.Tags, o => o.MapFrom(m => m.Tags))
 				;
 			
 			CreateMap<Commenter, CommentInput>()
