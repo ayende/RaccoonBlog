@@ -118,9 +118,35 @@
         <div class="related-posts_items">
             @foreach (var related in Model.Related)
             {
-                <a class="related-posts_item" href="@Url.Post(related.DomainId, related.Slug)">
-                    @Html.Raw(@related.Title)
-                </a>
+                <div class="related-posts_item" tabindex="0" data-href="@Url.Post(related.DomainId, related.Slug)">
+                    <div class="related-posts_mainlink">
+                        <span class="related-posts_date">@related.PublishedAt.ToString("dd MMM yyyy")</span>
+                        <span class="related-posts_title">@Html.Raw(@related.Title)</span>
+                    </div>
+                    @if (related.Tags != null && related.Tags.Count > 0)
+                    {
+                        <div class="related-posts_tags">
+                            <div class="related-posts_tags_header">
+                                <div class="icomoon-position icon-tag" aria-hidden="true"></div>
+                            </div>
+                            @{
+                                var tagList = related.Tags.ToList();
+                                var maxTags = 3;
+                            }
+                            @for (int i = 0; i < tagList.Count; i++)
+                            {
+                                var tag = tagList[i];
+                                var tagSlug = SlugConverter.TitleToSlug(tag);
+                                var extraClass = i >= maxTags ? "related-posts_tag--extra" : "";
+                                <a class="related-posts_tag @extraClass" href="@Url.Action("Tag", "Posts", new { slug = tagSlug })">@tag</a>
+                            }
+                            @if (tagList.Count > maxTags)
+                            {
+                                <span class="related-posts_tag_extra">+@(tagList.Count - maxTags)</span>
+                            }
+                        </div>
+                    }
+                </div>
             }
         </div>
     </div>
@@ -383,7 +409,26 @@
             t.ready = function (f) { t._e.push(f); };
             return t;
         }(document, "script", "twitter-wjs"));
+        
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.related-posts_item').forEach(function(item) {
+                item.addEventListener('click', function(e) {
+                    if (e.target.closest('.related-posts_tag')) return;
+                    var href = item.getAttribute('data-href');
+                    if (href) {
+                        window.location = href;
+                    }
+                });
+                item.addEventListener('keydown', function(e) {
+                    if ((e.key === 'Enter' || e.key === ' ') && !e.target.closest('.related-posts_tag')) {
+                        var href = item.getAttribute('data-href');
+                        if (href) {
+                            window.location = href;
+                        }
+                    }
+                });
+            });
+        });
     </script>
-
     @Recaptcha2Helper.ScriptRef()
 }
