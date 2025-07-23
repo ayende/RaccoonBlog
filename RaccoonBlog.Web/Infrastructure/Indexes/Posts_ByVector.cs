@@ -2,6 +2,7 @@
 using System.Linq;
 using RaccoonBlog.Web.Models;
 using Raven.Client.Documents.Indexes;
+using System.Collections.Generic;
 
 namespace RaccoonBlog.Web.Infrastructure.Indexes
 {
@@ -16,6 +17,8 @@ namespace RaccoonBlog.Web.Infrastructure.Indexes
             public DateTimeOffset PublishAt { get; set; }
 
             public object Vector { get; set; }
+            
+            public ICollection<string> Tags { get; set; }
         }
 
         public Posts_ByVector()
@@ -27,6 +30,7 @@ namespace RaccoonBlog.Web.Infrastructure.Indexes
                            {
                                Vector = LoadVector("Body", "postsbyvector"),
                                PublishAt = post.PublishAt,
+                               Tags = post.Tags
                            };
         }
     }
