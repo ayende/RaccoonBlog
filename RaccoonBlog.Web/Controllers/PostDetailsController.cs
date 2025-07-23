@@ -38,24 +38,12 @@ namespace RaccoonBlog.Web.Controllers
 
             SeriesInfo seriesInfo = GetSeriesInfo(post.Title);
 
-            var relatedIds = RavenSession.Query<Posts_ByVector.Query, Posts_ByVector>()
+            var related = RavenSession.Query<Posts_ByVector.Query, Posts_ByVector>()
                 .Where(p => p.PublishAt < DateTimeOffset.Now.AsMinutes())
                 .VectorSearch(x => x.WithField(p => p.Vector), x => x.ForDocument(post.Id))
                 .Take(3)
                 .Skip(1) // skip the current post, always the best match :-)
-                .Select(p => p.Id)
-                .ToList();
-
-            var relatedPosts = RavenSession.Load<Post>(relatedIds);
-
-            var related = relatedPosts.Values
-                .Select(p => new PostReference
-                {
-                    Id = p.Id,
-                    Title = p.Title,
-                    PublishedAt = p.PublishAt,
-                    Tags = p.Tags
-                })
+                .Select(p => new PostReference { Id = p.Id, Title = p.Title, PublishedAt = p.PublishAt, Tags = p.Tags})
                 .ToList();
 
             var comments = RavenSession.Load<PostComments>(post.CommentsId) ?? new PostComments();
