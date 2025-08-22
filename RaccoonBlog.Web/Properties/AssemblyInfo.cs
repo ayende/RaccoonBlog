@@ -8,9 +8,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("RaccoonBlog.Web")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Hibernating Rhinos")]
+[assembly: AssemblyCompany("RavenDB")]
 [assembly: AssemblyProduct("RaccoonBlog.Web")]
-[assembly: AssemblyCopyright("Copyright © Hibernating Rhinos 2011 - 2013")]
+[assembly: AssemblyCopyright("Copyright © RavenDB 2011 - 2025")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

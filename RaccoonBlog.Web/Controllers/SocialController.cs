@@ -1,6 +1,6 @@
 // -----------------------------------------------------------------------
-//  <copyright file="SocialController.cs" company="Hibernating Rhinos LTD">
-//      Copyright (c) Hibernating Rhinos LTD. All rights reserved.
+//  <copyright file="SocialController.cs" company="RavenDB LTD">
+//      Copyright (c) RavenDB LTD. All rights reserved.
 //  </copyright>
 // -----------------------------------------------------------------------
 

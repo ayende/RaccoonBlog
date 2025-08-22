@@ -1,6 +1,6 @@
 // //-----------------------------------------------------------------------
-// // <copyright company="Hibernating Rhinos LTD">
-// //     Copyright (c) Hibernating Rhinos LTD. All rights reserved.
+// // <copyright company="RavenDB LTD">
+// //     Copyright (c) RavenDB LTD. All rights reserved.
 // // </copyright>
 // //-----------------------------------------------------------------------
 using System;
