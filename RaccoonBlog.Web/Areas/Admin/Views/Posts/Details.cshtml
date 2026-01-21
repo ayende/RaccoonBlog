@@ -14,8 +14,8 @@
 			}
 			<a class="btn btn-primary" href="@Url.Action("Details", "PostDetails", new { Model.Post.Id, Model.Post.Slug, key = @Model.Post.Key, area = "" })">Private View</a>
 			<a class="btn btn-primary" href="@Url.Action("Edit", "Posts", new { id = @Model.Post.Id})">Edit</a>
-			<form action="@Url.Action("Delete", new { Model.Post.Id })" method="post" style="display: inline-block">
-				<input class="btn btn-warning" type="submit" value="Delete" class="confirm">
+			<form asp-action="Delete" asp-controller="Posts" asp-route-id="@Model.Post.Id" method="post" style="display: inline-block">
+				<input class="btn btn-warning confirm" type="submit" value="Delete" />
 			</form>
 
 		</div>
