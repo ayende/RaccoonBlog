@@ -55,6 +55,7 @@ builder.Services.AddRouting(options => options.LowercaseUrls = true);
 builder.Services.AddControllersWithViews(options =>
 {
     options.ModelBinderProviders.Insert(0, new GuidBinderProvider());
+    options.ModelBinderProviders.Insert(0, new RemoveSpacesEnumBinderProvider());
 })
 .AddNewtonsoftJson();
 builder.Services.AddScoped<MediaService>();

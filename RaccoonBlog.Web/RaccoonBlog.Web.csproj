@@ -31,7 +31,6 @@
     <Compile Remove="Services\RssModels\WordpressCategory.cs" />
 
     <!-- Exclude unused helpers that depend on old System.Web.Mvc types -->
-    <Compile Remove="Helpers\Binders\RemoveSpacesEnumBinder.cs" />
     <Compile Remove="Helpers\StaticFileUrlHelperExtensions.cs" />
     <Content Remove="compilerconfig.json" />
     <None Include="compilerconfig.json" />
@@ -47,7 +46,6 @@
     <None Include="Services\RssModels\Source.cs" />
     <None Include="Services\RssModels\UserInfo.cs" />
     <None Include="Services\RssModels\WordpressCategory.cs" />
-    <None Include="Helpers\Binders\RemoveSpacesEnumBinder.cs" />
     <None Include="Helpers\StaticFileUrlHelperExtensions.cs" />
     <None Include="wwwroot\images\android-chrome-192x192.png" />
     <None Include="wwwroot\images\android-chrome-512x512.png" />
