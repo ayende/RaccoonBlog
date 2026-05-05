@@ -47,26 +47,20 @@
             containerClass += " hideSidebar";
         }
         
-        // Initialize banner to display
-        var banners = new List<Banner>
+        var banners = BannerService.GetActiveBanners();
+                                                                                                                                                                                                                                                                      
+        BannerItem bannerToDisplay = null;
+        if (banners.Count > 0)
         {
-        new Banner {ResourceUrl = "https://ravendb.net/ravendb-vs-mongodb?utm_source=ayende_blog&utm_medium=banner", ImageSrc = "/css/img/banners/ravendb-vs-mongodb.jpg", AltText = "Comparison page for RavenDB and MongoDB"},
-        new Banner {ResourceUrl = "https://ravendb.net/?utm_source=ayende_blog&utm_medium=banner", ImageSrc = "/css/img/banners/ravendb.jpg", AltText = "RavenDB - High-Performance NoSQL Document Database"},
-        new Banner {ResourceUrl = "https://ravendb.net/whitepapers/couchbase-vs-ravendb-performance-at-rakuten-kobo?utm_source=ayende_blog&utm_medium=banner", ImageSrc = "/css/img/banners/couchbase-vs-ravendb-whitepaper.png", AltText = "Couchbase vs RavenDB Performance at Rakuten Kobo Whitepaper"},
-        new Banner {ResourceUrl = "https://ravendb.net/workshops?utm_source=ayende_blog&utm_medium=banner", ImageSrc = "/css/img/banners/workshops-ravendb.png", AltText = "RavenDB Workshops - Deep dive into practical use of Document Data Modeling"},
-        new Banner {ResourceUrl = "https://ravendb.net/learn/webinars?utm_source=ayende_blog&utm_medium=banner", ImageSrc = "/css/img/banners/webinars-ravendb.png", AltText = "Deep Dive into RavenDB webinars"},
-        new Banner {ResourceUrl = "https://ravendb.net/lp/ai-agent-creator?utm_source=ayende_blog&utm_medium=banner", ImageSrc = "/css/img/banners/ai-agent.jpg", AltText = "AI Agents, powered by your database - Bring AI into your applications with context, tools, and your data"},
-        };
-
-        var random = new Random();
-        int index = random.Next(banners.Count);
-        var bannerToDisplay = banners[index];
+            var random = new Random();
+            bannerToDisplay = banners[random.Next(banners.Count)];
+        }                                           
     }
     <div class="@containerClass">
         <div class="leftSide">
-            <header>
+            <header>   
                 <a asp-controller="Posts" asp-action="Index" class="logo">
-                    <h1>Oren Eini</h1>
+                <h1>Oren Eini</h1>
                     <span class="lead">aka Ayende Rahien</span>
                 </a>
                 <button class="menu-button" id="open-button"><i class="icon-arrow-down hide-sm" aria-hidden="true"></i></button>
@@ -134,9 +128,12 @@
                     <vc:archives-list></vc:archives-list>
                 </cache>
             </header>
+            @if (bannerToDisplay != null)
+            {
             <div class="bnr-carousel">
-                <a href="@bannerToDisplay.ResourceUrl" target="_blank"><img src="@bannerToDisplay.ImageSrc" class="img-responsive img-center" title="@bannerToDisplay.AltText" alt="@bannerToDisplay.AltText" /></a>
+                <a href="@bannerToDisplay.ResourceUrl" target="_blank"><img src="@(Url.Content($"~/banners/{bannerToDisplay.AttachmentName}") + "?v=" + CacheSignal.GetToken(CacheKeys.BannerArea))" class="img-responsive img-center" title="@bannerToDisplay.AltText" alt="@bannerToDisplay.AltText" /></a>
             </div>
+            }
             @RenderBody()
         </div>
         <section class="rightSide">
@@ -144,6 +141,7 @@
             @using RaccoonBlog.Web.Services
             @using RaccoonBlog.Web.ViewModels
             @inject Raven.Client.Documents.Session.IDocumentSession RavenSession
+            @inject BannerService BannerService
             @if (Context.User.Identity.IsAuthenticated)
             {
                 var userDoc = RavenSession.Query<RaccoonBlog.Web.Models.User>()

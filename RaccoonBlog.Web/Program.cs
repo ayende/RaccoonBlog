@@ -59,6 +59,7 @@ builder.Services.AddControllersWithViews(options =>
 })
 .AddNewtonsoftJson();
 builder.Services.AddScoped<MediaService>();
+builder.Services.AddSingleton<BannerService>();
 builder.Services.AddMetaWeblog<MetaWeblogService>();
 builder.Services.AddSingleton<CacheSignalService>();
 builder.Services.AddWebOptimizer(pipeline =>
@@ -87,6 +88,7 @@ builder.Services.AddWebOptimizer(pipeline =>
     }
 });
 builder.Services.AddOutputCache();
+builder.Services.AddMemoryCache();
 // Configure Session (required for session-based TempData)
 builder.Services.AddSession(options =>
 {
