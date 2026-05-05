@@ -22,6 +22,7 @@ namespace RaccoonBlog.Web.Infrastructure.AutoMapper.Profiles
 	        CreateMap<Post, PostInput>()
 	            .ForMember(x => x.Id, o => o.MapFrom(m => m.GetIdForUrl()))
 	            .ForMember(x => x.Tags, o => o.MapFrom(m => TagsResolver.ResolveTags(m.Tags)))
+	            .ForMember(x => x.SeoKeywords, o => o.MapFrom(m => TagsResolver.ResolveTags(m.SeoKeywords)))
 	            ;
 
 	        CreateMap<PostInput, Post>()
@@ -35,6 +36,7 @@ namespace RaccoonBlog.Web.Infrastructure.AutoMapper.Profiles
 	            .ForMember(x => x.LastEditedByUserId, o => o.Ignore())
 	            .ForMember(x => x.LastEditedAt, o => o.Ignore())
 	            .ForMember(x => x.Tags, o => o.MapFrom(m => TagsResolver.ResolveTagsInput(m.Tags)))
+	            .ForMember(x => x.SeoKeywords, o => o.MapFrom(m => TagsResolver.ResolveTagsInput(m.SeoKeywords)))
 	            .ForMember(x => x.PublishAt, o => o.MapFrom(m => m.PublishAt.HasValue ? m.PublishAt.Value : DateTimeOffset.MinValue))
 	            ;
 
@@ -43,9 +45,10 @@ namespace RaccoonBlog.Web.Infrastructure.AutoMapper.Profiles
 	            .ForMember(x => x.Slug, o => o.MapFrom(m => SlugConverter.TitleToSlug(m.Title)))
 	            .ForMember(x => x.PublishedAt, o => o.MapFrom(m => m.PublishAt))
 	            .ForMember(x => x.Key, o => o.MapFrom(m => m.ShowPostEvenIfPrivate))
+	            .ForMember(x => x.SeoKeywords, o => o.MapFrom(m => m.SeoKeywords))
 	            ;
 
-	        CreateMap<PostComments.Comment, AdminPostDetailsViewModel.Comment>()
+			CreateMap<PostComments.Comment, AdminPostDetailsViewModel.Comment>()
 	            .ForMember(x => x.Body, o => o.MapFrom(m => MarkdownResolver.Resolve(m.Body)))
 	            .ForMember(x => x.EmailHash, o => o.MapFrom(m => EmailHashResolver.Resolve(m.Email)))
 	            .ForMember(x => x.IsImportant, o => o.MapFrom(m => m.Important))
