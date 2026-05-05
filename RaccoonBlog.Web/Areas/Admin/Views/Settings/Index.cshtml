@@ -26,11 +26,16 @@
     @Html.EditorFor(x => x.RssLogin, "TextLong")
     <hr />
 
+    <h4>GenAI Spam Check</h4>
+    @Html.EditorFor(x => x.GenAiSpamCheckApiKey, "TextLong")
+    @Html.EditorFor(x => x.GenAiSpamCheckEndpoint, "TextLong")
+    @Html.EditorFor(x => x.GenAiSpamCheckModel, "TextLong")
+    <hr />
+
     <h4>Other</h4>
     @Html.EditorFor(x => x.MetaDescription, "TextLong")
     @Html.EditorFor(x => x.Copyright, "TextLong")
     @Html.EditorFor(x => x.CustomCss, "TextLong")
-    @Html.EditorFor(x => x.AkismetKey, "TextLong")
     @Html.EditorFor(x => x.GoogleAnalyticsKey, "TextLong")
     @Html.EditorFor(x => x.MinNumberOfPostForSignificantTag)
     @Html.EditorFor(x => x.NumberOfDayToCloseComments)

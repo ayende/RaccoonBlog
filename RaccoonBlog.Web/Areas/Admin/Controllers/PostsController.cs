@@ -11,7 +11,6 @@ using RaccoonBlog.Web.Helpers.Attributes;
 using RaccoonBlog.Web.Infrastructure.AutoMapper;
 using RaccoonBlog.Web.Infrastructure.Common;
 using RaccoonBlog.Web.Models;
-using RaccoonBlog.Web.Services;
 using RaccoonBlog.Web.ViewModels;
 using Raven.Client.Documents.Operations;
 
@@ -193,7 +192,9 @@ namespace RaccoonBlog.Web.Areas.Admin.Controllers
 					comments.Spam.RemoveAll(spams.Contains);
 					foreach (var comment in spams)
 					{
-						AkismetService.MarkSpam(comment);
+						comment.IsSpam = true;
+						comment.SpamCheckStatus = SpamCheckStatus.Spam;
+						comments.Spam.Add(comment);
 					}
 					break;
 
@@ -203,6 +204,13 @@ namespace RaccoonBlog.Web.Areas.Admin.Controllers
 						.ToArray();
 
 					comments.Spam.RemoveAll(ham.Contains);
+
+					foreach (var comment in ham)
+					{
+						comment.IsSpam = false;
+						comment.SpamCheckStatus = SpamCheckStatus.Clean;
+					}
+
 					comments.Comments.AddRange(ham);
 
 					comments.Comments
@@ -210,7 +218,7 @@ namespace RaccoonBlog.Web.Areas.Admin.Controllers
 						.ForEach(comment =>
 						         	{
 						         		comment.IsSpam = false;
-						         		AkismetService.MarkHam(comment);
+						         		comment.SpamCheckStatus = SpamCheckStatus.Clean;
 						         		ResetNumberOfSpamComments(comment);
 						         	});
 					break;

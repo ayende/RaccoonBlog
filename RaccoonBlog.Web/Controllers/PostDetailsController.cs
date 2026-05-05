@@ -5,14 +5,12 @@ using System.Net;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
-using HibernatingRhinos.Loci.Common.Tasks;
 using NLog;
 using RaccoonBlog.Web.Helpers;
 using RaccoonBlog.Web.Infrastructure.AutoMapper;
 using RaccoonBlog.Web.Infrastructure.AutoMapper.Profiles.Resolvers;
 using RaccoonBlog.Web.Infrastructure.Common;
 using RaccoonBlog.Web.Infrastructure.Indexes;
-using RaccoonBlog.Web.Infrastructure.Tasks;
 using RaccoonBlog.Web.Models;
 using RaccoonBlog.Web.ViewModels;
 using Raven.Client.Documents;
@@ -42,17 +40,25 @@ namespace RaccoonBlog.Web.Controllers
                 .Where(p => p.PublishAt < DateTimeOffset.Now.AsMinutes())
                 .VectorSearch(x => x.WithField(p => p.Vector), x => x.ForDocument(post.Id))
                 .Take(3)
-                .Skip(1) // skip the current post, always the best match :-)
+                .Skip(1)
                 .Select(p => new PostReference { Id = p.Id, Title = p.Title, PublishedAt = p.PublishAt, Tags = p.Tags})
                 .ToList();
 
             var comments = RavenSession.Load<PostComments>(post.CommentsId) ?? new PostComments();
+
+            var currentCommenterId = GetCurrentCommenterId();
+
+            var visibleComments = comments.Comments
+                .Where(c => c.SpamCheckStatus != SpamCheckStatus.Pending
+                            || Request.IsAuthenticated
+                            || (currentCommenterId != null && c.CommenterId == currentCommenterId))
+                .OrderBy(x => x.CreatedAt)
+                .ToList();
+
             var vm = new PostViewModel
             {
                 Post = post.MapTo<PostViewModel.PostDetails>(),
-                Comments = comments.Comments
-                            .OrderBy(x => x.CreatedAt)
-                            .MapTo<PostViewModel.Comment>(),
+                Comments = visibleComments.MapTo<PostViewModel.Comment>(),
                 NextPost = RavenSession.GetNextPrevPost(post, true),
                 PreviousPost = RavenSession.GetNextPrevPost(post, false),
                 AreCommentsClosed = comments.AreCommentsClosed(post, BlogConfig.NumberOfDayToCloseComments),
@@ -94,6 +100,16 @@ namespace RaccoonBlog.Web.Controllers
             return View("Details", vm);
         }
 
+        private string GetCurrentCommenterId()
+        {
+            var cookie = Request.Cookies[CommenterUtil.CommenterCookieName];
+            if (cookie == null)
+                return null;
+
+            var commenter = RavenSession.GetCommenter(cookie.Value);
+            return commenter?.Id;
+        }
+
         [ValidateInput(false)]
         [HttpPost]
         public virtual async Task<ActionResult> Comment(CommentInput input, string id, Guid key)
@@ -127,10 +143,32 @@ namespace RaccoonBlog.Web.Controllers
             if (ModelState.IsValid == false)
                 return PostingCommentFailed(post, input, key);
 
-            TaskExecutor.ExcuteLater(new AddCommentTask(input, Request.MapTo<AddCommentTask.RequestValues>(), id));
+            var comment = new PostComments.Comment
+            {
+                Id = comments.GenerateNewCommentId(),
+                Author = input.Name,
+                Body = input.Body,
+                CreatedAt = DateTimeOffset.Now,
+                Email = input.Email,
+                Url = input.Url,
+                Important = Request.IsAuthenticated,
+                UserAgent = Request.UserAgent,
+                UserHostAddress = Request.UserHostAddress,
+                SpamCheckStatus = SpamCheckStatus.Pending,
+            };
+
+            if (Request.IsAuthenticated == false)
+            {
+                commenter ??= new Commenter { Key = input.CommenterKey ?? Guid.Empty };
+                input.MapPropertiesToInstance(commenter);
+                DocumentSession.Store(commenter);
+                comment.CommenterId = commenter.Id;
+            }
+
+            post.CommentsCount++;
+            comments.Comments.Add(comment);
 
             CommenterUtil.SetCommenterCookie(Response, input.CommenterKey.MapTo<string>());
-
             OutputCacheManager.RemoveItem(SectionController.NameConst, MVC.Section.ActionNames.List);
 
             return PostingCommentSucceeded(post, input);
@@ -139,11 +177,8 @@ namespace RaccoonBlog.Web.Controllers
         private bool IsIpAddressBlocked()
         {
             var ip = Request.UserHostAddress;
-
             var blacklistId = BlackList.GetId(ip);
-
-            var documentExists = RavenSession.Advanced.Exists(blacklistId);
-            return documentExists;
+            return RavenSession.Advanced.Exists(blacklistId);
         }
 
         private ActionResult PostingCommentSucceeded(Post post, CommentInput input)

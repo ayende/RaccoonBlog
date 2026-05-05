@@ -1,52 +1,84 @@
 @model NewCommentEmailViewModel
-<h1>
-    A new
-    @if (Model.IsSpam)
-    {
-        <span style="color: red;">SPAM</span>
-    } 
-    comment on @Model.BlogName blog
-</h1>
-@if (Model.IsSpam)
-{
-    <p style="color: red; font-weight: bold;">
-        <strong>
-            This comment has been identified as SPAM.
-        </strong>
-        If it's not SPAM please go to
-        <a href="@Url.AbsoluteAction("Details", "Posts", new {id = Model.PostId, slug = Model.PostSlug, area = "Admin"})#comment@(Model.Id)">
-            post's admin page
-        </a>
-        and mark it as HAM.
-    </p>
+@{
+    Layout = null;
 }
-<strong>Post:</strong> <a href="@Url.AbsoluteAction("Details", "PostDetails", new { id = Model.PostId, slug = Model.PostSlug, key = Model.Key })">@Model.PostTitle</a>
-<ul>
-	<li><strong>Author:</strong> @Model.Author</li>
-	<li><strong>Url:</strong> @Model.Url</li>
-	<li><strong>Email:</strong> @Model.Email</li>
-	<li><strong>Created At:</strong> @Model.CreatedAt</li>
-    <li><strong>Commenter ID:</strong> @Model.CommenterId</li>
-    <li><strong>IP:</strong> @Model.IpAddress</li>
-    <li><strong>User-Agent:</strong> @Model.UserAgent</li>
-</ul>
-<strong>Body:</strong>
-<p>@Model.Body</p>
-<p>
-	<a href="@Url.AbsoluteAction("Details", "PostDetails", new { id = Model.PostId, slug = Model.PostSlug, key = Model.Key })#comment@(Model.Id)">
-		View Comment</a>
-</p>
-<p>
-	<a href="@Url.AbsoluteAction("Details", "Posts", new { id = Model.PostId, slug = Model.PostSlug, area = "Admin" })#comment@(Model.Id)">
-		View Comment In Admin Page</a>
-</p>
-<p>
-	<a href="@Url.AbsoluteAction("AddIpToBlackList", "Posts", new { ipAddress = Model.IpAddress, area = "Admin" })">
-		Add commenter IP to blacklist</a>
-</p>
-@if (Model.IsSpam)
-{
-	<p>
-	  <a href="@Url.AbsoluteAction("DeleteAllSpamComments", "Posts", new { area = "Admin" })#comment@(Model.Id)">Delete All Spam Comments</a>
-	</p>
-}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>New Comment - @Model.BlogName</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 0; background: #f5f5f5; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; background: #fff; }
+        .header { background: #2c3e50; color: #fff; padding: 24px; text-align: center; }
+        .header h1 { margin: 0; font-size: 22px; }
+        .header .subtitle { margin-top: 6px; font-size: 14px; opacity: 0.8; }
+        .content { padding: 24px; }
+        .comment-box { background: #f8f9fa; border-radius: 6px; padding: 16px; margin: 16px 0; border-left: 4px solid #27ae60; }
+        .comment-box .author { font-weight: 600; font-size: 15px; }
+        .comment-box .meta { font-size: 12px; color: #999; margin-bottom: 10px; }
+        .comment-box .body { font-size: 14px; line-height: 1.6; }
+        .details { font-size: 13px; color: #666; }
+        .details th { text-align: left; padding-right: 12px; white-space: nowrap; vertical-align: top; }
+        .details td { word-break: break-word; }
+        .footer { padding: 20px 24px; text-align: center; font-size: 12px; color: #999; border-top: 1px solid #eee; }
+        .actions { margin-top: 20px; text-align: center; }
+        .actions a { display: inline-block; margin: 0 6px 6px 0; padding: 8px 16px; border-radius: 4px; text-decoration: none; font-size: 13px; }
+        .btn-primary { background: #2980b9; color: #fff; }
+        .btn-primary:hover { background: #2471a3; }
+        .btn-danger { background: #e74c3c; color: #fff; }
+        .btn-danger:hover { background: #c0392b; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>New Comment</h1>
+            <div class="subtitle">@Model.BlogName</div>
+        </div>
+        <div class="content">
+            <p>A new comment was posted on <strong>@Model.PostTitle</strong>.</p>
+
+            <div class="comment-box">
+                <div class="author">@Model.Author</div>
+                <div class="meta">
+                    @Model.CreatedAt.ToString("MMM dd, yyyy hh:mm tt")
+                    @if (!string.IsNullOrEmpty(Model.Email))
+                    {
+                        <span>&middot; @Model.Email</span>
+                    }
+                </div>
+                <div class="body">@Model.Body</div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.Url))
+            {
+                <p class="details"><strong>URL:</strong> <a href="@Model.Url">@Model.Url</a></p>
+            }
+
+            <table class="details">
+                <tr><th>Post:</th><td><a href="@Url.AbsoluteAction("Details", "PostDetails", new { id = Model.PostId, slug = Model.PostSlug, key = Model.Key })">@Model.PostTitle</a></td></tr>
+                <tr><th>Author:</th><td>@Model.Author</td></tr>
+                <tr><th>Email:</th><td>@Model.Email</td></tr>
+                @if (!string.IsNullOrEmpty(Model.Url))
+                {
+                    <tr><th>URL:</th><td>@Model.Url</td></tr>
+                }
+                <tr><th>IP:</th><td>@Model.IpAddress</td></tr>
+                <tr><th>User-Agent:</th><td>@Model.UserAgent</td></tr>
+                <tr><th>Commenter:</th><td>@Model.CommenterId</td></tr>
+            </table>
+
+            <div class="actions">
+                <a class="btn-primary" href="@Url.AbsoluteAction("Details", "PostDetails", new { id = Model.PostId, slug = Model.PostSlug, key = Model.Key })#comment@(Model.Id)">View Comment</a>
+                <a class="btn-primary" href="@Url.AbsoluteAction("Details", "Posts", new { id = Model.PostId, slug = Model.PostSlug, area = "Admin" })#comment@(Model.Id)">Admin Page</a>
+                <a class="btn-danger" href="@Url.AbsoluteAction("AddIpToBlackList", "Posts", new { ipAddress = Model.IpAddress, area = "Admin" })">Block IP</a>
+            </div>
+        </div>
+        <div class="footer">
+            You received this because you own this blog at @Model.BlogName.
+        </div>
+    </div>
+</body>
+</html>

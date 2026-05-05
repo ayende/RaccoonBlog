@@ -68,7 +68,7 @@ namespace RaccoonBlog.ImportFromSubtext
 				config.Subtitle = "Unnatural acts on source code";
 				config.Title = "Ayende @ Rahien";
 				config.Copyright = "Ayende Rahien";
-				config.AkismetKey = "43f0db211711";
+				config.GenAiSpamCheckModel = "gpt-4";
 
 				s.Store(config);
 				s.SaveChanges();
