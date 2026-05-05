@@ -14,6 +14,7 @@
     <RootNamespace>RaccoonBlog.Web</RootNamespace>
     <AssemblyName>RaccoonBlog.Web</AssemblyName>
     <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
+    <LangVersion>12</LangVersion>
     <MvcBuildViews>false</MvcBuildViews>
     <UseIISExpress>true</UseIISExpress>
     <IISExpressSSLPort />
@@ -92,9 +93,7 @@
     <Reference Include="JetBrains.Annotations, Version=11.1.0.0, Culture=neutral, PublicKeyToken=1010a0d8d6380325, processorArchitecture=MSIL">
       <HintPath>..\packages\JetBrains.Annotations.11.1.0\lib\net20\JetBrains.Annotations.dll</HintPath>
     </Reference>
-    <Reference Include="Joel.Net.Akismet">
-      <HintPath>..\Libs\Joel.Net.Akismet\Joel.Net.Akismet.dll</HintPath>
-    </Reference>
+
     <Reference Include="Lambda2Js.Signed, Version=3.1.4.0, Culture=neutral, PublicKeyToken=9ba16f7edfc48fe6, processorArchitecture=MSIL">
       <HintPath>..\packages\Lambda2Js.Signed.3.1.4\lib\net40\Lambda2Js.Signed.dll</HintPath>
     </Reference>
@@ -356,8 +355,7 @@
     <Compile Include="Infrastructure\Indexes\Posts_ByVector.cs" />
     <Compile Include="Infrastructure\Jobs\RedditIntegration.cs" />
     <Compile Include="Infrastructure\Jobs\SocialNetworkIntegrationJobsRegistry.cs" />
-    <Compile Include="Infrastructure\Tasks\BackgroundTask.cs" />
-    <Compile Include="Infrastructure\Tasks\TaskExecutor.cs" />
+    <Compile Include="Infrastructure\EmailSubscription.cs" />
     <Compile Include="LegacyPostController.generated.cs">
       <DependentUpon>T4MVC.tt</DependentUpon>
     </Compile>
@@ -369,6 +367,7 @@
     <Compile Include="Models\Configs.cs" />
     <Compile Include="Models\DynamicContent.cs" />
     <Compile Include="Models\SocialNetworkIntegration.cs" />
+    <Compile Include="Models\SendEmailCommand.cs" />
     <Compile Include="Models\SocialNetwork\Reddit.cs" />
     <Compile Include="PostDetailsController.generated.cs">
       <DependentUpon>T4MVC.tt</DependentUpon>
@@ -674,15 +673,12 @@
     <Compile Include="Infrastructure\AutoMapper\Profiles\Resolvers\EmailHashResolver.cs" />
     <Compile Include="Infrastructure\AutoMapper\Profiles\PostsViewModelMapperProfile.cs" />
     <Compile Include="Infrastructure\AutoMapper\Profiles\PostViewModelMapperProfile.cs" />
-    <Compile Include="Infrastructure\Tasks\AddCommentTask.cs" />
-    <Compile Include="Infrastructure\Tasks\SendEmailTask.cs" />
     <Compile Include="Controllers\RaccoonController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Infrastructure\AutoMapper\AutoMapperExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Services\AkismetService.cs" />
     <Compile Include="Infrastructure\Common\DateTimeOffsetExtensions.cs" />
     <Compile Include="Services\IMetaWeblog.cs" />
     <Compile Include="Services\MetaWeblog.cs" />
@@ -704,6 +700,7 @@
     <Compile Include="ViewModels\CurrentUserViewModel.cs" />
     <Compile Include="ViewModels\FuturePostViewModel.cs" />
     <Compile Include="ViewModels\NewCommentEmailViewModel.cs" />
+    <Compile Include="ViewModels\SpamDigestEmailViewModel.cs" />
     <Compile Include="ViewModels\PostReference.cs" />
     <Compile Include="ViewModels\PostsSeriesViewModel.cs" />
     <Compile Include="ViewModels\PostsStatisticsViewModel.cs" />

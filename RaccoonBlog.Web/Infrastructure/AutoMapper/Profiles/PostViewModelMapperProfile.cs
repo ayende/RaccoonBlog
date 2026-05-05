@@ -18,6 +18,7 @@ namespace RaccoonBlog.Web.Infrastructure.AutoMapper.Profiles
 				.ForMember(x => x.IsCommentAllowed, o => o.MapFrom(m => m.AllowComments))
 				.ForMember(x => x.Title, o => o.MapFrom(m => HttpUtility.HtmlDecode(m.Title)))
 				.ForMember(x => x.Author, o => o.Ignore())
+				.ForMember(x => x.SeoKeywords, o => o.MapFrom(m => m.SeoKeywords))
 				;
 
 			CreateMap<PostComments.Comment, PostViewModel.Comment>()
