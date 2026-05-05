@@ -1,0 +1,81 @@
+@model SpamDigestEmailViewModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spam Digest - @Model.BlogName</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 0; background: #f5f5f5; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; background: #fff; }
+        .header { background: #2c3e50; color: #fff; padding: 24px; text-align: center; }
+        .header h1 { margin: 0; font-size: 22px; }
+        .header .subtitle { margin-top: 6px; font-size: 14px; opacity: 0.8; }
+        .content { padding: 24px; }
+        .summary { background: #f8f9fa; border-radius: 6px; padding: 16px; margin-bottom: 20px; border-left: 4px solid #e74c3c; }
+        .summary strong { font-size: 18px; }
+        .comment-card { border: 1px solid #e0e0e0; border-radius: 6px; margin-bottom: 16px; overflow: hidden; }
+        .comment-card .meta { background: #f8f9fa; padding: 10px 14px; border-bottom: 1px solid #e0e0e0; font-size: 13px; color: #666; }
+        .comment-card .meta a { color: #2980b9; text-decoration: none; }
+        .comment-card .body { padding: 14px; font-size: 14px; line-height: 1.5; }
+        .comment-card .body p { margin: 0 0 8px; }
+        .footer { padding: 20px 24px; text-align: center; font-size: 12px; color: #999; border-top: 1px solid #eee; }
+        .btn { display: inline-block; background: #2980b9; color: #fff; text-decoration: none; padding: 8px 16px; border-radius: 4px; font-size: 13px; }
+        .btn:hover { background: #2471a3; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Spam Comments Digest</h1>
+            <div class="subtitle">@Model.BlogName</div>
+        </div>
+        <div class="content">
+            <div class="summary">
+                <strong>@Model.TotalCount comment(s)</strong> flagged as spam on <strong>@Model.Date</strong>
+            </div>
+
+            @if (Model.Comments != null && Model.Comments.Any())
+            {
+                foreach (var comment in Model.Comments)
+                {
+                    <div class="comment-card">
+                        <div class="meta">
+                            <strong>@comment.Author</strong> on
+                            <a href="@Url.AbsoluteAction("Details", "Posts", new { id = comment.PostId, slug = comment.PostSlug, area = "Admin" })">
+                                @comment.PostTitle
+                            </a>
+                            &middot; @comment.Timestamp.ToString("MMM dd, yyyy hh:mm tt")
+                        </div>
+                        <div class="body">
+                            @if (comment.BodyPreview != null)
+                            {
+                                <p>@comment.BodyPreview</p>
+                            }
+                            <p style="margin-top: 10px;">
+                                <a class="btn" href="@Url.AbsoluteAction("Details", "Posts", new { id = comment.PostId, slug = comment.PostSlug, area = "Admin" })#comment@(comment.CommentId)">
+                                    Review in Admin
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <p>No spam comments recorded.</p>
+            }
+
+            <p style="text-align: center; margin-top: 20px;">
+                <a class="btn" href="@Url.AbsoluteAction("DeleteAllSpamComments", "Posts", new { area = "Admin" })">Delete All Spam Comments</a>
+            </p>
+        </div>
+        <div class="footer">
+            This is an automated digest from @Model.BlogName. You can manage spam comments from the admin panel.
+        </div>
+    </div>
+</body>
+</html>

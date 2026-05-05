@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
-using HibernatingRhinos.Loci.Common.Tasks;
 using NLog;
 using RaccoonBlog.Web.Helpers;
 using RaccoonBlog.Web.Infrastructure.Tasks;
@@ -179,16 +178,38 @@ namespace RaccoonBlog.Web.Services
             {
                 var subject = $"Failed submitting post to /r/{postSubmission.Subreddit}";
                 var author = _session.Load<User>(post.AuthorId);
-                var model = new RedditSubmissionFailedViewModel()
+
+                var command = new SendEmailCommand
                 {
-                    Submission = postSubmission,
-                    Post = post
+                    Type = "RedditFailure",
+                    View = "RedditSubmissionFailed",
+                    Subject = subject,
+                    SendTo = author.Email,
+                    ReplyTo = null,
+                    ModelJson = new System.Web.Script.Serialization.JavaScriptSerializer().Serialize(new
+                    {
+                        Post = new
+                        {
+                            Id = post.GetIdForUrl(),
+                            Title = HttpUtility.HtmlDecode(post.Title),
+                            Slug = SlugConverter.TitleToSlug(post.Title)
+                        },
+                        Submission = new
+                        {
+                            Subreddit = postSubmission.Subreddit,
+                            Status = postSubmission.Status.ToString(),
+                            Attempts = postSubmission.Attempts
+                        }
+                    })
                 };
-                TaskExecutor.ExcuteLater(new SendEmailTask(null, subject, "RedditSubmissionFailed", author.Email, model));
+
+                _session.Store(command);
+                _session.Advanced.GetMetadataFor(command)["@collection"] = "EmailCommands";
+                _log.Info("Queued Reddit failure email for: {Subject}", subject);
             }
             catch (Exception e)
             {
-                _log.ErrorException("Error notifying on Reddit submission failures.", e);
+                _log.Error(e, "Error notifying on Reddit submission failures.");
             }
         }
 
