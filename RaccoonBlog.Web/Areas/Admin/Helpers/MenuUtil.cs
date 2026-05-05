@@ -20,6 +20,8 @@ namespace RaccoonBlog.Web.Areas.Admin.Helpers
                 new MenuItem {Title = "Add new post", Url = url.Action("Add", "Posts"), Type = MenuButtonType.Add},
 				new MenuItem {Title = "Sections", Url = url.Action("Index", "Sections"), Type = MenuButtonType.Plain},
                 new MenuItem {Title = "Add new section", Url = url.Action("Add", "Sections"), Type = MenuButtonType.Add},
+				new MenuItem {Title = "Banners", Url = url.Action("Index", "Banners"), Type = MenuButtonType.Plain},
+                new MenuItem {Title = "Add new banner", Url = url.Action("Add", "Banners"), Type = MenuButtonType.Add},
 				new MenuItem {Title = "Users", Url = url.Action("Index", "Users"), Type = MenuButtonType.Plain},
                 new MenuItem {Title = "Add new user", Url = url.Action("Add", "Users"), Type = MenuButtonType.Add},
 				new MenuItem {Title = "Tools", Type = MenuButtonType.Toggle,

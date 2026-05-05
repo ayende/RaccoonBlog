@@ -1,0 +1,61 @@
+@model RaccoonBlog.Web.Models.BannerItem
+@{
+    ViewBag.H1 = Model.IsNewBanner() ? "Add new banner" : "Edit banner " + Model.AltText;
+    ViewBag.Title = ViewBag.H1;
+}
+
+@if (ViewData.ModelState.IsValid == false)
+{
+    <div class="form-error">
+        @Html.ValidationSummary(true)
+    </div>
+}
+
+<h3 class="pull-left-sm">@ViewBag.H1</h3>
+<a href='@Url.Action("Index", "Banners")' class="btn btn-primary btn-sm pull-right-sm">View banners</a>
+<div class="clearfix"></div>
+<hr />
+
+@using (Html.BeginForm("Update", "Banners", FormMethod.Post, new { enctype = "multipart/form-data", @class = "form-horizontal" }))
+{
+    @Html.HiddenFor(x => x.Id)
+
+    <div class="row">
+        <div class="col-lg-6">
+            @Html.EditorFor(x => x.ResourceUrl, "TextAbove")
+            @Html.EditorFor(x => x.AltText, "TextAbove")
+            @Html.EditorFor(x => x.StartDate, "DateTime")
+            @Html.EditorFor(x => x.EndDate, "DateTime")
+        </div>
+        <div class="col-lg-6">
+            @if (!Model.IsNewBanner())
+            {
+                <div class="form-group">
+                    <label class="col-sm-2 col-lg-12">Banner</label>
+                    <div class="col-sm-10 col-lg-12">
+                        <img src="@Url.Content($"~/banners/{Model.AttachmentName}")" class="img-fluid img-thumbnail" />
+                    </div>
+                </div>
+            }
+            
+            <div class="mb-3">
+                <label class="form-label">
+                    @(Model.IsNewBanner() ? "Banner" : "Replace banner")
+                </label>
+                <input type="file" name="image" accept="image/jpeg,image/png" @(Model.IsNewBanner() ? "required" : "") />
+            </div>
+        </div>
+    </div>
+
+    <input type="submit" value="Save" class="btn btn-primary pull-right" />
+    <div class="clearfix"></div>
+}
+
+@section Script
+{
+    <script type="text/javascript">
+        $(function () {
+            $('.datepicker input').datetimepicker({ showClear: true });
+        });
+    </script>
+}

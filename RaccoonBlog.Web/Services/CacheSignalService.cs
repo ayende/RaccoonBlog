@@ -6,6 +6,7 @@ namespace RaccoonBlog.Web.Services
     public static class CacheKeys
     {
         public const string SectionArea = "Section_Area";
+        public const string BannerArea = "Banner_Area";
     }
 
     public class CacheSignalService

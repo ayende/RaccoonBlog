@@ -1,0 +1,59 @@
+@model IEnumerable<RaccoonBlog.Web.Models.BannerItem>
+@{
+    ViewBag.Title = "Manage banners";
+}
+<h3 class="pull-left-sm">All banners</h3>
+<a href='@Url.Action("Add", "Banners")' class="btn btn-primary btn-sm pull-right-sm">Add new banner</a>
+<div class="clearfix"></div>
+<hr />
+
+@Html.AntiForgeryToken()
+@foreach (var banner in Model)
+{
+    <div class="row section">
+        <div class="col-sm-4 col-md-3 col-lg-6">
+            <div class="small">Alt text</div>
+            <div class="lead">@banner.AltText</div>
+        </div>
+        <div class="col-sm-4 col-md-3 col-lg-2">
+            <div class="form-group">
+                <select class="form-control" data-id="@banner.Id">
+                    <option selected="@(banner.Enabled ? true : false)" value="true">Active</option>
+                    <option selected="@(!banner.Enabled ? true : false)" value="false">Disabled</option>
+                </select>
+            </div>
+        </div>
+        <div class="col-sm-4 col-md-3 col-lg-2">
+            <a href="@Url.Action("Edit", "Banners")?id=@banner.Id" class="btn btn-primary btn-block">Edit</a>
+        </div>
+        <div class="col-sm-4 col-md-3 col-lg-2">
+            @using (Html.BeginForm("Delete", "Banners"))
+            {
+                <input type="hidden" name="id" value="@banner.Id" />
+                <input type="submit" value="Delete" class="btn btn-warning btn-block">
+            }
+        </div>
+    </div>
+}
+
+@section Script
+{
+    <script type="text/javascript">
+        $('div.section select').change(function () {
+            var select = $(this);
+            var previousValue = select.find('option:not(:selected)').val();
+            var id = select.data('id');
+            var value = select.val();
+            var queryString = "?id=" + encodeURIComponent(id) + "&activate=" + value;
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("Activate", "Banners")' + queryString,
+                headers: {
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                }
+            }).fail(function () {
+                select.val(previousValue);
+            });
+        });
+    </script>
+}
