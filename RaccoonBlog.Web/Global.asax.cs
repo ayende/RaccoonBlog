@@ -18,6 +18,7 @@ using RaccoonBlog.Web.Helpers.Binders;
 using RaccoonBlog.Web.Infrastructure.AutoMapper;
 using RaccoonBlog.Web.Infrastructure.Indexes;
 using RaccoonBlog.Web.Infrastructure.Jobs;
+using RaccoonBlog.Web.Services;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Conventions;
 using Raven.Client.Documents.Indexes;
@@ -71,11 +72,19 @@ namespace RaccoonBlog.Web
 			AutoMapperConfiguration.Configure();
 			BundleConfig.RegisterBundles(BundleTable.Bundles);
 
-			RaccoonController.DocumentStore = DocumentStore;
+            RaccoonController.DocumentStore = DocumentStore;
 			TaskExecutor.DocumentStore = DocumentStore;
 
             JobManager.JobException += JobExceptionHandler;
             JobManager.Initialize(new SocialNetworkIntegrationJobsRegistry());
+
+            // Start RavenDB subscription worker for social publishing commands.
+            // Commands are created when posts are saved with @social/* tags.
+            // Each command has @refresh metadata set to the post's PublishAt time.
+            // The subscription picks up commands when Status == "Pending" and
+            // @refresh has triggered (meaning PublishAt has arrived).
+            // NOTE: Requires the RavenDB database to have the Refresh feature enabled.
+            SocialPublishingWorker.Start(DocumentStore);
         }
 
 	    public static IDocumentStore DocumentStore { get; private set; }

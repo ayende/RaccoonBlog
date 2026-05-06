@@ -14,6 +14,7 @@ using RaccoonBlog.Web.Models;
 using RaccoonBlog.Web.Services;
 using RaccoonBlog.Web.ViewModels;
 using Raven.Client.Documents.Operations;
+using Raven.Client.Documents.Session;  // for IDocumentSession.Advanced.GetMetadataFor
 
 namespace RaccoonBlog.Web.Areas.Admin.Controllers
 {
@@ -74,6 +75,13 @@ namespace RaccoonBlog.Web.Areas.Admin.Controllers
 				post.PublishAt = postScheduleringStrategy.Schedule();
 			}
 
+			// New posts must have at least one @social tag or @social/disable
+			if (input.IsNewPost() && SocialTagParser.HasSocialTags(post.Tags) == false)
+			{
+				ModelState.AddModelError("Tags", "New posts must include at least one @social tag (e.g. @social/twitter) or @social/disable.");
+				return View("Edit", input);
+			}
+
 			// Actually save the post now
 			RavenSession.Store(post);
 
@@ -94,6 +102,9 @@ namespace RaccoonBlog.Web.Areas.Admin.Controllers
 				RavenSession.Store(comments);
 				post.CommentsId = comments.Id;	
 			}
+
+			// Manage social publishing commands
+			UpdateSocialPublishCommands(post);
 
 			return RedirectToAction("Details", new {Id = post.MapTo<PostReference>().DomainId});
 		}
@@ -154,6 +165,18 @@ namespace RaccoonBlog.Web.Areas.Admin.Controllers
 
 			post.PublishAt = post.PublishAt.WithDate(DateTimeOffsetUtil.ConvertFromJsTimestamp(date));
 			RavenSession.Load<PostComments>(post.CommentsId).Post.PublishAt = post.PublishAt;
+
+			// Update @refresh on all pending social publish commands
+			var pendingCommands = RavenSession.Query<SocialPublishCommand>()
+				.Where(c => c.PostId == post.Id && c.Status == CommandStatus.Pending)
+				.ToList();
+
+			foreach (var cmd in pendingCommands)
+			{
+				cmd.PublishAt = post.PublishAt;
+				var metadata = RavenSession.Advanced.GetMetadataFor(cmd);
+				metadata["@refresh"] = post.PublishAt.UtcDateTime.ToString("o");
+			}
 
 			return Json(new {success = true});
 		}
@@ -252,6 +275,42 @@ namespace RaccoonBlog.Web.Areas.Admin.Controllers
             RavenSession.Delete(post);
 
             return SuccessResponse();
+        }
+
+        private void UpdateSocialPublishCommands(Post post)
+        {
+            // Delete any existing pending commands for this post
+            var existingCommands = RavenSession.Query<SocialPublishCommand>()
+                .Where(c => c.PostId == post.Id && c.Status == CommandStatus.Pending)
+                .ToList();
+
+            foreach (var cmd in existingCommands)
+                RavenSession.Delete(cmd);
+
+            // Create new commands based on tags
+            if (SocialTagParser.IsDisabled(post.Tags))
+                return;
+
+            var targets = SocialTagParser.Parse(post.Tags, BlogConfig);
+            foreach (var (target, account) in targets)
+            {
+                var cmdId = $"social-commands/{post.GetIdForUrl()}/{target}{(account != null ? $"/{account}" : "")}";
+                var cmd = new SocialPublishCommand
+                {
+                    Id = cmdId,
+                    PostId = post.Id,
+                    Target = target,
+                    Account = account,
+                    PublishAt = post.PublishAt,
+                    Status = CommandStatus.Pending
+                };
+
+                RavenSession.Store(cmd);
+
+                // Set @refresh metadata — RavenDB will touch the document at PublishAt
+                var metadata = RavenSession.Advanced.GetMetadataFor(cmd);
+                metadata["@refresh"] = post.PublishAt.UtcDateTime.ToString("o");
+            }
         }
 
         private ActionResult SuccessResponse()
