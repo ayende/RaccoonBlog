@@ -1,4 +1,5 @@
-﻿@using RaccoonBlog.Web.Infrastructure.Common
+﻿@using RaccoonBlog.Web.Helpers
+@using RaccoonBlog.Web.Infrastructure.Common
 @model PostViewModel
 @{
     string title = @Model.Post.Title;
@@ -11,10 +12,15 @@
 @section HeaderAdditions
 {
     @{
-        var description = PostHelper.GetMetaDescription(Model.Post.Body);
+        var description = SeoHelper.GetEffectiveMetaDescription(Model.Post);
         var url = Request.Url.AbsoluteUri;
     }
     <meta name="description" content="@description">
+
+    @if (Model.Post.SeoKeywords != null && Model.Post.SeoKeywords.Count > 0)
+    {
+        <meta name="keywords" content="@string.Join(", ", Model.Post.SeoKeywords)">
+    }
 
     <meta name="og:site_name" content="@ViewBag.BlogConfig.Title">
     <meta name="og:type" content="website">
@@ -44,6 +50,8 @@
         }
 
         <link rel="canonical" href="@link">
+
+        @SeoHelper.RenderJsonLd(Model.Post, link)
     }
 }
 
@@ -93,12 +101,15 @@
         <a href="#comments">
             <span class="icomoon-position glyphicon icon-comment" aria-hidden="true"></span><span>@Model.Comments.Count comments</span>
         </a>
-        @if (Model.Post.Tags.Count > 0)
+        @{
+            var visiblePostTags = Model.Post.Tags?.Where(t => !t.Name.StartsWith("@")).ToList();
+        }
+        @if (visiblePostTags != null && visiblePostTags.Count > 0)
         {
             <div class="tags pull-right-lg">
                 <span class="icomoon-position icon-tag" aria-hidden="true"></span> Tags:
                 <ul>
-                    @foreach (var tag in Model.Post.Tags)
+                    @foreach (var tag in visiblePostTags)
                     {
                         <li><a href="@Url.Action("Tag", "Posts", new {tag.Slug})">@tag.Name</a></li>
                     }
@@ -130,7 +141,7 @@
                                 <div class="icomoon-position icon-tag" aria-hidden="true"></div>
                             </div>
                             @{
-                                var tagList = related.Tags.ToList();
+                                var tagList = related.Tags.Where(t => !t.StartsWith("@")).ToList();
                                 var maxTags = 3;
                             }
                             @for (int i = 0; i < tagList.Count; i++)

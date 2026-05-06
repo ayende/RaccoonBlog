@@ -70,12 +70,15 @@
 				<a href="@Url.Action("Details", "PostDetails", new { post.Id, post.Slug })#comments">
 					<span class="icomoon-position glyphicon icon-comment" aria-hidden="true"></span><span>@post.CommentsCount comments</span>
 				</a>
-				@if (post.Tags.Count > 0)
+				@{
+					var visibleTags = post.Tags?.Where(t => !t.Name.StartsWith("@")).ToList();
+				}
+				@if (visibleTags != null && visibleTags.Count > 0)
 				{
 					<div class="tags pull-right-lg">
 						<span class="icomoon-position icon-tag" aria-hidden="true"></span> Tags:
 						<ul>
-							@foreach (var tag in post.Tags)
+							@foreach (var tag in visibleTags)
 							{
 								<li><a href="@Url.Action("Tag", "Posts", new {tag.Slug})">@tag.Name</a></li>
 							}

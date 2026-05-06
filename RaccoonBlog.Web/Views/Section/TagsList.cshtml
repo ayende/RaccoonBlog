@@ -6,7 +6,7 @@
 	<ul>
 		@{
 			var url = Url.Action(MVC.Posts.ActionNames.Tag, MVC.Posts.Name, new { Slug = "_s_"}); // Url.Action is slow
-			foreach (var tag in Model)
+			foreach (var tag in Model.Where(t => !t.Name.StartsWith("@")))
 			{
 				<li>
 					<a href="@url.Replace("_s_", tag.Slug)">@tag.Name</a>&nbsp;<span>(@tag.Count)</span>&nbsp;<a href="@Url.Action("Rss", "Syndication", new { Tag = tag.Slug })" class="rss">rss</a>

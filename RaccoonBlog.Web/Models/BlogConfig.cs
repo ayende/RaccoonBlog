@@ -88,6 +88,42 @@ namespace RaccoonBlog.Web.Models
         [Display(Name = "Reddit Subreddits To Submit To On Publish - comma-separated e.g. /r/test,/r/example")]
         public string RedditSubredditsToSubmitToOnPublish { get; set; }
 
+        [Display(Name = "Twitter API Key (RavenDB account)")]
+        public string TwitterAccountRavendbApiKey { get; set; }
+
+        [Display(Name = "Twitter API Secret (RavenDB account)")]
+        public string TwitterAccountRavendbApiSecret { get; set; }
+
+        [Display(Name = "Twitter Access Token (RavenDB account)")]
+        public string TwitterAccountRavendbAccessToken { get; set; }
+
+        [Display(Name = "Twitter Access Token Secret (RavenDB account)")]
+        public string TwitterAccountRavendbAccessTokenSecret { get; set; }
+
+        [Display(Name = "Twitter API Key (Personal account)")]
+        public string TwitterAccountAyendeApiKey { get; set; }
+
+        [Display(Name = "Twitter API Secret (Personal account)")]
+        public string TwitterAccountAyendeApiSecret { get; set; }
+
+        [Display(Name = "Twitter Access Token (Personal account)")]
+        public string TwitterAccountAyendeAccessToken { get; set; }
+
+        [Display(Name = "Twitter Access Token Secret (Personal account)")]
+        public string TwitterAccountAyendeAccessTokenSecret { get; set; }
+
+        [Display(Name = "Discord Webhook URL")]
+        public string DiscordWebhookUrl { get; set; }
+
+        [Display(Name = "GitHub Personal Access Token")]
+        public string GitHubPersonalAccessToken { get; set; }
+
+        [Display(Name = "GitHub Discussion Repository (owner/name)")]
+        public string GitHubDiscussionRepo { get; set; }
+
+        [Display(Name = "GitHub Discussion Category ID")]
+        public string GitHubDiscussionCategoryId { get; set; }
+
         public static BlogConfig New()
         {
             return new BlogConfig

@@ -39,6 +39,10 @@ namespace RaccoonBlog.Web.ViewModels
 			public ICollection<string> Tags { get; set; }
 
 			public string Key { get; set; }
+
+			public string SeoMetaDescription { get; set; }
+			public ICollection<string> SeoKeywords { get; set; }
+			public DateTimeOffset? SeoLastAnalyzedAt { get; set; }
 		}
 	}
 }
