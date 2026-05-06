@@ -31,9 +31,9 @@ namespace RaccoonBlog.Web.Controllers
             return StatusCode(304);
         }
 
-        protected IActionResult Xml(XDocument xml, string etag)
+        protected IActionResult Xml(XDocument xml, string etag, DateTimeOffset? lastModified = null)
         {
-            return new XmlResult(xml, etag);
+            return new XmlResult(xml, etag, lastModified);
         }
 
         public const int DefaultPage = 1;
