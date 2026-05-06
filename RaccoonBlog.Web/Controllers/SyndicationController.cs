@@ -1,5 +1,7 @@
 using HibernatingRhinos.Loci.Common.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Net.Http.Headers;
 using NLog;
 using RaccoonBlog.Web.Helpers;
 using RaccoonBlog.Web.Infrastructure.AutoMapper.Profiles.Resolvers;
@@ -19,6 +21,10 @@ namespace RaccoonBlog.Web.Controllers
         private static Logger _log = LogManager.GetCurrentClassLogger();
 
         private static readonly string EtagInitValue = Guid.NewGuid().ToString();
+
+        private const int PublicFeedPageSize = 25;
+        private const int TokenAuthorizedFeedPageSize = 50;
+
         public SyndicationController(IDocumentStore documentStore, IDocumentSession ravenSession) : base(documentStore, ravenSession)
         {
         }
@@ -48,13 +54,16 @@ namespace RaccoonBlog.Web.Controllers
         {
             public string Title;
             public int Take;
+            public int Skip;
+            public int ETagPage;
             public bool AddExpiredNote;
             public IRavenQueryable<Post> PostsQuery;
         }
 
-        public virtual IActionResult Rss(string tag, string token)
+        public virtual IActionResult Rss(string tag, string token, int page = 1)
         {
-            var queryBehavior = SetQueryLimitsBasedOnToken(token, RavenSession.Query<Post>().Statistics(out var stats));
+            if (page < 1) page = 1;
+            var queryBehavior = SetQueryLimitsBasedOnToken(token, RavenSession.Query<Post>().Statistics(out var stats), page);
 
             var postsQuery = queryBehavior.PostsQuery;
 
@@ -62,6 +71,7 @@ namespace RaccoonBlog.Web.Controllers
                 postsQuery = postsQuery.Where(x => x.TagsAsSlugs.Any(postTag => postTag == tag));
 
             var posts = postsQuery.OrderByDescending(x => x.PublishAt)
+                .Skip(queryBehavior.Skip)
                 .Take(queryBehavior.Take)
                 .ToList();
 
@@ -76,9 +86,10 @@ namespace RaccoonBlog.Web.Controllers
                 });
             }
 
-            string responseETagHeader;
-            if (CheckEtag(stats, out responseETagHeader))
-                return HttpNotModified();
+            var lastModified = posts.Count > 0 ? posts[0].PublishAt : (DateTimeOffset)stats.Timestamp;
+
+            if (CheckConditionalHeaders(stats, lastModified, out var responseETagHeader, queryBehavior.ETagPage))
+                return HttpNotModified(responseETagHeader, lastModified);
 
             var rss = new XDocument(
                 new XElement("rss",
@@ -102,33 +113,36 @@ namespace RaccoonBlog.Web.Controllers
                     )
                 );
 
-            return Xml(rss, responseETagHeader);
+            return Xml(rss, responseETagHeader, lastModified);
         }
 
-        private QueryBehavior SetQueryLimitsBasedOnToken(string token, IRavenQueryable<Post> postsQuery)
+        private QueryBehavior SetQueryLimitsBasedOnToken(string token, IRavenQueryable<Post> postsQuery, int page)
         {
             var behavior = new QueryBehavior
             {
                 AddExpiredNote = false,
                 Title = BlogConfig.Title,
-                Take = 20
+                Take = PublicFeedPageSize,
+                Skip = 0
             };
             if (string.IsNullOrEmpty(token))
             {
+                behavior.ETagPage = 1;
                 behavior.PostsQuery = postsQuery.Where(x => x.PublishAt < DateTimeOffset.Now.AsMinutes());
                 return behavior;
             }
 
-            int numberOfDays;
-            string user;
-            if (IsRssAccessTokenCurrent(token, out numberOfDays, out user))
+            if (IsRssAccessTokenCurrent(token, out int numberOfDays, out string user))
             {
-                behavior.Take = Math.Max(numberOfDays, behavior.Take);
+                behavior.Take = TokenAuthorizedFeedPageSize;
+                behavior.Skip = (page - 1) * TokenAuthorizedFeedPageSize;
+                behavior.ETagPage = page;
                 behavior.Title = behavior.Title + " for " + user;
                 behavior.PostsQuery = postsQuery.Where(x => x.PublishAt < DateTimeOffset.Now.AddDays(numberOfDays).AsMinutes());
             }
             else
             {
+                behavior.ETagPage = 1;
                 behavior.Title = behavior.Title + " for " + user + " EXPIRED TOKEN";
                 behavior.PostsQuery = postsQuery.Where(x => x.PublishAt < DateTimeOffset.Now.AsMinutes());
                 behavior.AddExpiredNote = true;
@@ -181,8 +195,13 @@ namespace RaccoonBlog.Web.Controllers
                 return q.Statistics(out stats).Take(30);
             });
 
-            if (CheckEtag(stats, out var responseETagHeader))
-                return HttpNotModified();
+            DateTimeOffset? lastModified = commentsTuples.Count > 0
+                ? commentsTuples[0].Item1.CreatedAt
+                : null;
+
+
+            if (CheckConditionalHeaders(stats, lastModified, out var responseETagHeader))
+                return HttpNotModified(responseETagHeader, lastModified);
 
             var rss = new XDocument(
             new XElement("rss",
@@ -208,15 +227,26 @@ namespace RaccoonBlog.Web.Controllers
                 )
             );
 
-            return Xml(rss, responseETagHeader);
-
+            return Xml(rss, responseETagHeader, lastModified);
         }
 
-        private bool CheckEtag(QueryStatistics stats, out string responseETagHeader)
+        private bool CheckConditionalHeaders(QueryStatistics stats, DateTimeOffset? lastModified, out string responseETagHeader, int page = 1)
         {
-            string requestETagHeader = Request.Headers["If-None-Match"].ToString() ?? string.Empty;
-            responseETagHeader = stats.Timestamp.ToString("o") + EtagInitValue;
-            return requestETagHeader == responseETagHeader;
+            var etagValue = stats.Timestamp.ToString("o") + EtagInitValue + (page > 1 ? $"_p{page}" : "");
+            responseETagHeader = $"\"{etagValue}\"";
+
+            var ifNoneMatchHeader = Request.Headers["If-None-Match"].ToString();
+            if (!string.IsNullOrEmpty(ifNoneMatchHeader) && EntityTagHeaderValue.TryParseList([ifNoneMatchHeader], out var etags))
+            {
+                var current = etagValue;
+                if (etags.Any(e => e.Tag == "*" || e.Tag.Value?.Trim('"') == current))
+                    return true;
+            }
+
+            if (DateTimeOffset.TryParse(Request.Headers["If-Modified-Since"].ToString(), out var ifModifiedSince) && lastModified <= ifModifiedSince)
+                return true;
+
+            return false;
         }
 
         public virtual IActionResult LegacyRss()
