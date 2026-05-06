@@ -76,9 +76,14 @@ namespace RaccoonBlog.Web.Controllers
                 });
             }
 
-            string responseETagHeader;
-            if (CheckEtag(stats, out responseETagHeader))
+            var lastModified = posts.Count > 0 ? posts[0].PublishAt : (DateTimeOffset)stats.Timestamp;
+
+            if (CheckConditionalHeaders(stats, lastModified, out var responseETagHeader))
+            {
+                Response.Headers["ETag"] = responseETagHeader;
+                Response.Headers["Last-Modified"] = lastModified.ToString("R");
                 return HttpNotModified();
+            }
 
             var rss = new XDocument(
                 new XElement("rss",
@@ -102,7 +107,7 @@ namespace RaccoonBlog.Web.Controllers
                     )
                 );
 
-            return Xml(rss, responseETagHeader);
+            return Xml(rss, responseETagHeader, lastModified);
         }
 
         private QueryBehavior SetQueryLimitsBasedOnToken(string token, IRavenQueryable<Post> postsQuery)
@@ -123,7 +128,7 @@ namespace RaccoonBlog.Web.Controllers
             string user;
             if (IsRssAccessTokenCurrent(token, out numberOfDays, out user))
             {
-                behavior.Take = Math.Max(numberOfDays, behavior.Take);
+                behavior.Take = 50;
                 behavior.Title = behavior.Title + " for " + user;
                 behavior.PostsQuery = postsQuery.Where(x => x.PublishAt < DateTimeOffset.Now.AddDays(numberOfDays).AsMinutes());
             }
@@ -181,8 +186,16 @@ namespace RaccoonBlog.Web.Controllers
                 return q.Statistics(out stats).Take(30);
             });
 
-            if (CheckEtag(stats, out var responseETagHeader))
+            var lastModified = commentsTuples.Count > 0
+                ? commentsTuples[0].Item1.CreatedAt
+                : (DateTimeOffset)stats.Timestamp;
+
+            if (CheckConditionalHeaders(stats, lastModified, out var responseETagHeader))
+            {
+                Response.Headers["ETag"] = responseETagHeader;
+                Response.Headers["Last-Modified"] = lastModified.ToString("R");
                 return HttpNotModified();
+            }
 
             var rss = new XDocument(
             new XElement("rss",
@@ -208,15 +221,20 @@ namespace RaccoonBlog.Web.Controllers
                 )
             );
 
-            return Xml(rss, responseETagHeader);
-
+            return Xml(rss, responseETagHeader, lastModified);
         }
 
-        private bool CheckEtag(QueryStatistics stats, out string responseETagHeader)
+        private bool CheckConditionalHeaders(QueryStatistics stats, DateTimeOffset lastModified, out string responseETagHeader)
         {
-            string requestETagHeader = Request.Headers["If-None-Match"].ToString() ?? string.Empty;
             responseETagHeader = stats.Timestamp.ToString("o") + EtagInitValue;
-            return requestETagHeader == responseETagHeader;
+
+            if (Request.Headers["If-None-Match"].ToString() == responseETagHeader)
+                return true;
+
+            if (DateTimeOffset.TryParse(Request.Headers["If-Modified-Since"].ToString(), out var ifModifiedSince) && lastModified <= ifModifiedSince)
+                return true;
+
+            return false;
         }
 
         public virtual IActionResult LegacyRss()
