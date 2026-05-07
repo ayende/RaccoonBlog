@@ -41,9 +41,7 @@ namespace RaccoonBlog.Web.Areas.Admin.Controllers
         [HttpGet]
         public IActionResult Edit(string id)
         {
-            var doc = RavenSession.Load<BlogBanners>(BlogBanners.DocumentId);
-            var banner = doc?.Banners.FirstOrDefault(b => b.Id == id);
-            if (banner == null)
+            if (TryGetBanner(id, out var banner, out _) == false)
                 return NotFound("Banner does not exist.");
 
             return View(banner);
@@ -54,11 +52,6 @@ namespace RaccoonBlog.Web.Areas.Admin.Controllers
         public IActionResult Update(BannerItem item, IFormFile image)
         {
             var doc = RavenSession.Load<BlogBanners>(BlogBanners.DocumentId);
-            if (doc == null)
-            {
-                doc = new BlogBanners { Id = BlogBanners.DocumentId };
-                RavenSession.Store(doc);
-            }
 
             if (image != null && image.Length > 0 && !AllowedImageTypes.Contains(image.ContentType))
             {
@@ -76,6 +69,12 @@ namespace RaccoonBlog.Web.Areas.Admin.Controllers
                 {
                     ModelState.AddModelError("image", "Image is required for new banners.");
                     return View("Edit", item);
+                }
+
+                if (doc == null)
+                {
+                    doc = new BlogBanners { Id = BlogBanners.DocumentId };
+                    RavenSession.Store(doc);
                 }
 
                 item.Id = Guid.NewGuid().ToString();
@@ -98,7 +97,7 @@ namespace RaccoonBlog.Web.Areas.Admin.Controllers
 
             if (image != null && image.Length > 0)
             {
-                var attachmentName = item.AttachmentName ?? existing.AttachmentName;
+                var attachmentName = existing?.AttachmentName ?? item.AttachmentName;
                 RavenSession.Advanced.Attachments.Store(BlogBanners.DocumentId, attachmentName, image.OpenReadStream(), image.ContentType);
             }
 
@@ -110,9 +109,7 @@ namespace RaccoonBlog.Web.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Activate(string id, bool activate)
         {
-            var doc = RavenSession.Load<BlogBanners>(BlogBanners.DocumentId);
-            var banner = doc?.Banners.FirstOrDefault(b => b.Id == id);
-            if (banner == null)
+            if (TryGetBanner(id, out var banner, out _) == false)
                 return NotFound("Banner does not exist.");
 
             banner.Enabled = activate;
@@ -125,9 +122,7 @@ namespace RaccoonBlog.Web.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Delete(string id)
         {
-            var doc = RavenSession.Load<BlogBanners>(BlogBanners.DocumentId);
-            var banner = doc?.Banners.FirstOrDefault(b => b.Id == id);
-            if (banner == null)
+            if (TryGetBanner(id, out var banner, out var doc) == false)
                 return NotFound("Banner does not exist.");
 
             doc.Banners.Remove(banner);
@@ -139,6 +134,13 @@ namespace RaccoonBlog.Web.Areas.Admin.Controllers
                 return Json(new { Success = true });
 
             return RedirectToAction("Index");
+        }
+
+        private bool TryGetBanner(string id, out BannerItem banner, out BlogBanners doc)
+        {
+            doc = RavenSession.Load<BlogBanners>(BlogBanners.DocumentId);
+            banner = doc?.Banners.FirstOrDefault(b => b.Id == id);
+            return banner != null;
         }
     }
 }
