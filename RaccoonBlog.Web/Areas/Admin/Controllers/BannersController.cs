@@ -61,7 +61,7 @@ namespace RaccoonBlog.Web.Areas.Admin.Controllers
 
             var existing = string.IsNullOrEmpty(item.Id)
                 ? null
-                : doc.Banners.FirstOrDefault(b => b.Id == item.Id);
+                : doc?.Banners.FirstOrDefault(b => b.Id == item.Id);
 
             if (existing == null)
             {
