@@ -48,13 +48,12 @@
         }
         
         var banners = BannerService.GetActiveBanners();
-                                                                                                                                                                                                                                                                      
         BannerItem bannerToDisplay = null;
         if (banners.Count > 0)
         {
             var random = new Random();
             bannerToDisplay = banners[random.Next(banners.Count)];
-        }                                           
+        }
     }
     <div class="@containerClass">
         <div class="leftSide">
