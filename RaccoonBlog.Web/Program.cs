@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.MicrosoftAccount;
 using Microsoft.AspNetCore.Authentication.Twitter;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -23,6 +24,7 @@ using RaccoonBlog.Web.Helpers;
 using RaccoonBlog.Web.Helpers.Binders;
 using RaccoonBlog.Web.Infrastructure.AutoMapper;
 using RaccoonBlog.Web.Infrastructure.Configuration;
+using RaccoonBlog.Web.Infrastructure.DataProtection;
 using RaccoonBlog.Web.Infrastructure.Indexes;
 using RaccoonBlog.Web.Services;
 using Raven.Client.Documents;
@@ -156,6 +158,11 @@ if (int.TryParse(builder.Configuration["Raven:RequestsTimeoutInSec"], out int ti
 documentStore.Initialize();
 HibernatingRhinos.Loci.Common.Tasks.TaskExecutor.DocumentStore = documentStore;
 builder.Services.AddSingleton<IDocumentStore>(documentStore);
+
+builder.Services.AddDataProtection()
+    .SetApplicationName("RaccoonBlog")
+    .AddKeyManagementOptions(o => o.XmlRepository = new RavenDbXmlRepository(documentStore));
+
 builder.Services.AddScoped<IDocumentSession>(ctx =>
 {
     return ctx.GetRequiredService<IDocumentStore>().OpenSession();
