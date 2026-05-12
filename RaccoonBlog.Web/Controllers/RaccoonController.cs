@@ -26,8 +26,12 @@ namespace RaccoonBlog.Web.Controllers
             RavenSession = ravenSession;
         }
 
-        protected StatusCodeResult HttpNotModified()
+        protected StatusCodeResult HttpNotModified(string etag = null, DateTimeOffset? lastModified = null)
         {
+            if (etag != null)
+                Response.Headers["ETag"] = etag;
+            if (lastModified.HasValue)
+                Response.Headers["Last-Modified"] = lastModified.Value.ToString("R");
             return StatusCode(304);
         }
 
