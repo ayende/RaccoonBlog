@@ -1,5 +1,7 @@
 using HibernatingRhinos.Loci.Common.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Net.Http.Headers;
 using NLog;
 using RaccoonBlog.Web.Helpers;
 using RaccoonBlog.Web.Infrastructure.AutoMapper.Profiles.Resolvers;
@@ -79,11 +81,7 @@ namespace RaccoonBlog.Web.Controllers
             var lastModified = posts.Count > 0 ? posts[0].PublishAt : (DateTimeOffset)stats.Timestamp;
 
             if (CheckConditionalHeaders(stats, lastModified, out var responseETagHeader))
-            {
-                Response.Headers["ETag"] = responseETagHeader;
-                Response.Headers["Last-Modified"] = lastModified.ToString("R");
-                return HttpNotModified();
-            }
+                return HttpNotModified(responseETagHeader, lastModified);
 
             var rss = new XDocument(
                 new XElement("rss",
@@ -186,16 +184,13 @@ namespace RaccoonBlog.Web.Controllers
                 return q.Statistics(out stats).Take(30);
             });
 
-            var lastModified = commentsTuples.Count > 0
+            DateTimeOffset? lastModified = commentsTuples.Count > 0
                 ? commentsTuples[0].Item1.CreatedAt
-                : (DateTimeOffset)stats.Timestamp;
+                : null;
+
 
             if (CheckConditionalHeaders(stats, lastModified, out var responseETagHeader))
-            {
-                Response.Headers["ETag"] = responseETagHeader;
-                Response.Headers["Last-Modified"] = lastModified.ToString("R");
-                return HttpNotModified();
-            }
+                return HttpNotModified(responseETagHeader, lastModified);
 
             var rss = new XDocument(
             new XElement("rss",
@@ -224,12 +219,18 @@ namespace RaccoonBlog.Web.Controllers
             return Xml(rss, responseETagHeader, lastModified);
         }
 
-        private bool CheckConditionalHeaders(QueryStatistics stats, DateTimeOffset lastModified, out string responseETagHeader)
+        private bool CheckConditionalHeaders(QueryStatistics stats, DateTimeOffset? lastModified, out string responseETagHeader)
         {
-            responseETagHeader = stats.Timestamp.ToString("o") + EtagInitValue;
+            var etagValue = stats.Timestamp.ToString("o") + EtagInitValue;
+            responseETagHeader = $"\"{etagValue}\"";
 
-            if (Request.Headers["If-None-Match"].ToString() == responseETagHeader)
-                return true;
+            var ifNoneMatchHeader = Request.Headers["If-None-Match"].ToString();
+            if (!string.IsNullOrEmpty(ifNoneMatchHeader) && EntityTagHeaderValue.TryParseList([ifNoneMatchHeader], out var etags))
+            {
+                var current = etagValue;
+                if (etags.Any(e => e.Tag == "*" || e.Tag.Value?.Trim('"') == current))
+                    return true;
+            }
 
             if (DateTimeOffset.TryParse(Request.Headers["If-Modified-Since"].ToString(), out var ifModifiedSince) && lastModified <= ifModifiedSince)
                 return true;
