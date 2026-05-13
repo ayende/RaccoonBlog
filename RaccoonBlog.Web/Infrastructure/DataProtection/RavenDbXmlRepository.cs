@@ -3,6 +3,7 @@ using System.Linq;
 using System.Xml.Linq;
 using Microsoft.AspNetCore.DataProtection.Repositories;
 using Raven.Client.Documents;
+using Raven.Client.Exceptions;
 
 namespace RaccoonBlog.Web.Infrastructure.DataProtection;
 
@@ -20,9 +21,8 @@ public class RavenDbXmlRepository : IXmlRepository
     public IReadOnlyCollection<XElement> GetAllElements()
     {
         using var session = _documentStore.OpenSession();
-        return session.Query<DataProtectionKey>()
-            .Where(k => k.Id.StartsWith(IdPrefix))
-            .ToList()
+
+        return session.Advanced.LoadStartingWith<DataProtectionKey>(IdPrefix)
             .Select(k => XElement.Parse(k.Xml))
             .ToList();
     }
@@ -30,14 +30,23 @@ public class RavenDbXmlRepository : IXmlRepository
     public void StoreElement(XElement element, string friendlyName)
     {
         using var session = _documentStore.OpenSession();
-        var id = IdPrefix + (string.IsNullOrEmpty(friendlyName) ? System.Guid.NewGuid().ToString() : friendlyName);
-        session.Store(new DataProtectionKey { Id = id, Xml = element.ToString() }, id);
-        session.SaveChanges();
-    }
+        session.Advanced.UseOptimisticConcurrency = true;
 
-    private class DataProtectionKey
-    {
-        public string Id { get; set; }
-        public string Xml { get; set; }
+        var id = IdPrefix + (string.IsNullOrEmpty(friendlyName) ? System.Guid.NewGuid().ToString() : friendlyName);
+        try
+        {
+            session.Store(new DataProtectionKey { Id = id, Xml = element.ToString() });
+            session.SaveChanges();
+        }
+        catch (ConcurrencyException)
+        {
+            // another instance already stored the same key - noop GetAllElements() will load the existing key
+        }
     }
+}
+
+internal class DataProtectionKey
+{
+    public string Id { get; set; }
+    public string Xml { get; set; }
 }
