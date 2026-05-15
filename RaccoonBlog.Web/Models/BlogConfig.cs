@@ -45,15 +45,6 @@ namespace RaccoonBlog.Web.Models
         [Display(Name = "Copyright string")]
         public string Copyright { get; set; }
 
-        [Display(Name = "GenAI Spam Check API Key")]
-        public string GenAiSpamCheckApiKey { get; set; }
-
-        [Display(Name = "GenAI Spam Check Endpoint")]
-        public string GenAiSpamCheckEndpoint { get; set; }
-
-        [Display(Name = "GenAI Spam Check Model")]
-        public string GenAiSpamCheckModel { get; set; }
-
         [Display(Name = "Google-Analytics Key")]
         public string GoogleAnalyticsKey { get; set; }
 

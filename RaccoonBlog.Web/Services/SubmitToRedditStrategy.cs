@@ -4,7 +4,6 @@ using System.Linq;
 using System.Web;
 using NLog;
 using RaccoonBlog.Web.Helpers;
-using RaccoonBlog.Web.Infrastructure.Tasks;
 using RaccoonBlog.Web.Models;
 using RaccoonBlog.Web.Services.Reddit;
 using RaccoonBlog.Web.ViewModels;
@@ -137,7 +136,8 @@ namespace RaccoonBlog.Web.Services
 
             try
             {
-                var redditPost = subreddit.SubmitPost(HttpUtility.HtmlDecode(post.Title), PostHelper.Url(post));
+                var title = post.Social?.RedditTitle ?? HttpUtility.HtmlDecode(post.Title);
+                var redditPost = subreddit.SubmitPost(title, PostHelper.Url(post));
                 if (redditPost == null)
                 {
                     throw new Exception($"Got null from reddit submit for {post.Id}");

@@ -46,7 +46,7 @@ namespace RaccoonBlog.Web.Helpers
                 schema["author"] = new Dictionary<string, object>
                 {
                     ["@type"] = "Person",
-                    ["name"] = post.Author.FullName ?? "Oren Eini"
+                    ["name"] = post.Author.FullName
                 };
             }
 

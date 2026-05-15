@@ -68,7 +68,8 @@ namespace RaccoonBlog.ImportFromSubtext
 				config.Subtitle = "Unnatural acts on source code";
 				config.Title = "Ayende @ Rahien";
 				config.Copyright = "Ayende Rahien";
-				config.GenAiSpamCheckModel = "gpt-4";
+				// GenAI spam check and SEO analysis are configured via RavenDB Studio
+				// using the "ai-chat" connection string.
 
 				s.Store(config);
 				s.SaveChanges();

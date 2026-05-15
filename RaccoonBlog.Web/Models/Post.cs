@@ -40,6 +40,8 @@ namespace RaccoonBlog.Web.Models
 
         public SocialNetworkIntegration Integration { get; set; }
 
+		public SocialMedia Social { get; set; }
+
 		public string SeoMetaDescription { get; set; }
 		public ICollection<string> SeoKeywords { get; set; }
 		public DateTimeOffset? SeoLastAnalyzedAt { get; set; }

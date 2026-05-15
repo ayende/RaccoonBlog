@@ -40,7 +40,8 @@ namespace RaccoonBlog.Web.Helpers
             return documentSession.Query<Post>()
                 .Where(x => x.PublishAt <= currentDateTimeOffset &&
                             x.TagsAsSlugs.Any(t => t == SendToRedditTag) &&
-                            (x.Integration == null || 
+                            (x.Social == null || x.Social.DisableAutoPublish == false) &&
+                            (x.Integration == null ||
                              x.Integration.Reddit == null ||
                              x.Integration.Reddit.Submitted == false))
                 .OrderBy(x => x.PublishAt)

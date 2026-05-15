@@ -368,6 +368,7 @@
     <Compile Include="Models\DynamicContent.cs" />
     <Compile Include="Models\SocialNetworkIntegration.cs" />
     <Compile Include="Models\SendEmailCommand.cs" />
+    <Compile Include="Models\SocialMedia.cs" />
     <Compile Include="Models\SocialNetwork\Reddit.cs" />
     <Compile Include="PostDetailsController.generated.cs">
       <DependentUpon>T4MVC.tt</DependentUpon>

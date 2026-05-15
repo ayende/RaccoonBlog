@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Mail;
 using System.Text;
+using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
 using System.Web.Routing;
@@ -25,6 +26,8 @@ namespace RaccoonBlog.Web.Infrastructure
             _started = true;
 
             var store = MvcApplication.DocumentStore;
+            // Expects a data subscription named "email-worker" on the EmailCommands collection
+            // to be created in RavenDB Studio before starting the application.
             var worker = store.Subscriptions.GetSubscriptionWorker<SendEmailCommand>("email-worker");
 
             worker.AfterAcknowledgment += (_, _) => _log.Info("Email subscription batch acknowledged.");

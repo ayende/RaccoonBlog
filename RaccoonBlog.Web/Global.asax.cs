@@ -79,6 +79,7 @@ namespace RaccoonBlog.Web
             ConfigureRefresh();
             CreateGenAiTask();
             CreateSeoGenAiTask();
+            CreateSocialMediaGenAiTask();
             EmailSubscription.Start();
 
 			JobManager.JobException += JobExceptionHandler;
@@ -146,36 +147,19 @@ namespace RaccoonBlog.Web
             _log.Info("Document refresh enabled.");
         }
 
+        // Both GenAI tasks expect an AI connection string named "ai-chat" to be configured
+        // in RavenDB Studio before starting the application. The connection string should point
+        // to a chat-capable model (e.g., OpenAI gpt-4o-mini or equivalent).
+
         private static void CreateGenAiTask()
         {
             try
             {
-                var apiKey = WebConfigurationManager.AppSettings["GenAi/ApiKey"];
-                var endpoint = WebConfigurationManager.AppSettings["GenAi/Endpoint"] ?? "https://api.openai.com/v1";
-                var model = WebConfigurationManager.AppSettings["GenAi/Model"] ?? "gpt-4o-mini";
-
-                if (string.IsNullOrEmpty(apiKey))
-                {
-                    _log.Warn("GenAi/ApiKey not configured - GenAI spam filter task not created.");
-                    return;
-                }
-
-                var connectionString = new AiConnectionString
-                {
-                    Name = "open-ai-cs",
-                    ModelType = AiModelType.Chat,
-                    OpenAiSettings = new OpenAiSettings(
-                        apiKey: apiKey,
-                        endpoint: endpoint,
-                        model: model)
-                };
-                DocumentStore.Maintenance.Send(new PutConnectionStringOperation<AiConnectionString>(connectionString));
-
                 var config = new GenAiConfiguration
                 {
                     Name = "spam-filter",
                     Identifier = "spam-filter",
-                    ConnectionStringName = "open-ai-cs",
+                    ConnectionStringName = "ai-chat",
                     Disabled = false,
                     Collection = "PostComments",
                     GenAiTransformation = new GenAiTransformation
@@ -223,9 +207,15 @@ if ($output.IsSpam) {
         PostId: this.Post.Id, Timestamp: new Date().toISOString()
     };
 
+    var post = load(this.Post.Id);
+    if (post) {
+        post.CommentsCount--;
+        if (post.CommentsCount < 0) post.CommentsCount = 0;
+    }
+
     var dig = load(digestId);
     if (dig) {
-        dig.Comments.push(spamEntry);
+        dig.SpamComments.push(spamEntry);
         dig.Count++;
         put(digestId, dig);
     } else {
@@ -244,6 +234,13 @@ if ($output.IsSpam) {
     }
 } else {
     this.Comments[idx].SpamCheckStatus = 'Valid';
+
+    if ($input.CommenterId) {
+        var commenter = load($input.CommenterId);
+        if (commenter) {
+            commenter.IsTrustedCommenter = true;
+        }
+    }
 
     var blogConfig = load('Blog/Config');
     var blogName = blogConfig ? blogConfig.Title : '';
@@ -294,7 +291,7 @@ if ($output.IsSpam) {
                 {
                     Name = "SEO Analysis",
                     Identifier = "seo-analysis",
-                    ConnectionStringName = "OpenAI Generative",
+                    ConnectionStringName = "ai-chat",
                     Disabled = false,
                     Collection = "Posts",
                     GenAiTransformation = new GenAiTransformation
@@ -338,6 +335,69 @@ this.SeoLastAnalyzedAt = new Date().toISOString();
             catch (Exception e)
             {
                 _log.Error(e, "Failed to create GenAI SEO analysis task.");
+            }
+        }
+
+        private static void CreateSocialMediaGenAiTask()
+        {
+            try
+            {
+                var config = new GenAiConfiguration
+                {
+                    Name = "social-media",
+                    Identifier = "social-media",
+                    ConnectionStringName = "ai-chat",
+                    Disabled = false,
+                    Collection = "Posts",
+                    GenAiTransformation = new GenAiTransformation
+                    {
+                        Script =
+"""
+if (!this.Social || !this.Social.GeneratedAt) {
+    if (this.PublishAt && new Date(this.PublishAt) <= new Date()) {
+        ai.genContext({
+            Title: this.Title,
+            Body: this.Body,
+            Tags: this.Tags
+        });
+    }
+}
+"""
+                    },
+                    Prompt =
+"""
+You are a social media manager for a technical blog about software development,
+databases, and distributed systems. Generate engaging social media text for the
+blog post provided.
+
+1. Twitter: A concise, engaging tweet (max 250 characters, excluding URL which
+   will be appended automatically). Should hook technical readers. Include 1-2
+   relevant hashtags if natural. Do not include a URL.
+
+2. Reddit: A compelling submission title for a programming subreddit audience.
+   Should be informative and spark discussion. No clickbait. Max 300 characters.
+""",
+                    SampleObject =
+"""
+{
+    "TwitterText": "Concise engaging tweet text with #relevantHashtag",
+    "RedditTitle": "Compelling Reddit submission title for technical audience"
+}
+""",
+                    UpdateScript =
+"""
+this.Social = this.Social || {};
+this.Social.TwitterText = $output.TwitterText;
+this.Social.RedditTitle = $output.RedditTitle;
+this.Social.GeneratedAt = new Date().toISOString();
+"""
+                };
+                DocumentStore.Maintenance.Send(new AddGenAiOperation(config));
+                _log.Info("GenAI social media task created.");
+            }
+            catch (Exception e)
+            {
+                _log.Error(e, "Failed to create GenAI social media task.");
             }
         }
     }
