@@ -118,7 +118,8 @@ namespace RaccoonBlog.Web.Infrastructure
                 store.Subscriptions.Create(new SubscriptionCreationOptions
                 {
                     Name = SubscriptionName,
-                    Query = "from Posts"
+                    Query = "from Posts where Social.GeneratedAt != null",
+                    ChangeVector = "LastDocument"
                 });
                 _log.Info("Created data subscription '{Name}'.", SubscriptionName);
             }
