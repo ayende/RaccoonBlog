@@ -255,16 +255,15 @@ namespace RaccoonBlog.Web.Areas.Admin.Controllers
 						.ToArray();
 
 					comments.Spam.RemoveAll(ham.Contains);
-					comments.Comments.AddRange(ham);
 
-					comments.Comments
-						.Where(c => c.IsSpam)
-						.ForEach(comment =>
-						         	{
-						         		comment.IsSpam = false;
-						         		comment.SpamCheckStatus = SpamCheckStatus.Valid;
-						         		ResetNumberOfSpamComments(comment);
-						         	});
+					foreach (var comment in ham)
+					{
+						comment.IsSpam = false;
+						comment.SpamCheckStatus = SpamCheckStatus.Valid;
+						ResetNumberOfSpamComments(comment);
+					}
+
+					comments.Comments.AddRange(ham);
 					break;
 				default:
 					throw new InvalidOperationException(command + " command is not recognized.");

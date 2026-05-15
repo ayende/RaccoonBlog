@@ -34,14 +34,13 @@ namespace RaccoonBlog.Web.Infrastructure
             {
                 try
                 {
-                    await worker.Run(async batch =>
+                    await worker.Run(batch =>
                     {
                         foreach (var item in batch.Items)
                         {
                             ProcessCommand(store, item.Result);
                         }
-
-                        await Task.CompletedTask;
+                        return Task.CompletedTask;
                     });
                 }
                 catch (Exception e)
