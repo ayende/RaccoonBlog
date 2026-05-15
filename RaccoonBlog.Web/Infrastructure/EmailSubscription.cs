@@ -57,13 +57,12 @@ namespace RaccoonBlog.Web.Infrastructure
 
             try
             {
+                using var session = store.OpenSession();
+                var blogConfig = session.Load<RaccoonBlog.Web.Models.BlogConfig>("Blog/Config");
+
                 var sendTo = cmd.SendTo;
                 if (string.IsNullOrEmpty(sendTo))
-                {
-                    using var session = store.OpenSession();
-                    var blogConfig = session.Load<RaccoonBlog.Web.Models.BlogConfig>("Blog/Config");
                     sendTo = blogConfig?.OwnerEmail;
-                }
 
                 if (string.IsNullOrEmpty(sendTo))
                 {
@@ -71,12 +70,14 @@ namespace RaccoonBlog.Web.Infrastructure
                     return;
                 }
 
+                var blogName = cmd.BlogName ?? blogConfig?.Title ?? "";
+
                 using (var client = new SmtpClient())
                 {
                     var message = new MailMessage
                     {
                         IsBodyHtml = true,
-                        Body = BuildEmailBody(cmd),
+                        Body = BuildEmailBody(cmd, blogName),
                         Subject = cmd.Subject
                     };
 
@@ -98,11 +99,12 @@ namespace RaccoonBlog.Web.Infrastructure
             }
         }
 
-        private static string BuildEmailBody(SendEmailCommand cmd)
+        private static string BuildEmailBody(SendEmailCommand cmd, string blogName)
         {
             if (cmd.Type == "NewComment")
             {
                 return $"<h2>New comment on {cmd.PostTitle}</h2>" +
+                       $"<p><em>{blogName}</em></p>" +
                        $"<p><strong>{cmd.Author}</strong> ({cmd.CommentEmail})</p>" +
                        $"<p>{cmd.CommentBody}</p>" +
                        $"<p>IP: {cmd.IpAddress} | UA: {cmd.UserAgent}</p>";
@@ -110,8 +112,8 @@ namespace RaccoonBlog.Web.Infrastructure
 
             if (cmd.Type == "SpamDigest")
             {
-                return $"<h2>Spam Digest for {cmd.DigestDate}</h2>" +
-                       $"<p>{cmd.SpamComments?.Count ?? 0} comments flagged as spam.</p>";
+                return $"<h2>Spam Digest — {blogName}</h2>" +
+                       $"<p>{cmd.SpamComments?.Count ?? 0} comments flagged as spam on {cmd.DigestDate}.</p>";
             }
 
             return $"<p>{cmd.Subject}</p>";
