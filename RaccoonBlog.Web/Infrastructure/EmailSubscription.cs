@@ -57,6 +57,20 @@ namespace RaccoonBlog.Web.Infrastructure
 
             try
             {
+                var sendTo = cmd.SendTo;
+                if (string.IsNullOrEmpty(sendTo))
+                {
+                    using var session = store.OpenSession();
+                    var blogConfig = session.Load<RaccoonBlog.Web.Models.BlogConfig>("Blog/Config");
+                    sendTo = blogConfig?.OwnerEmail;
+                }
+
+                if (string.IsNullOrEmpty(sendTo))
+                {
+                    _log.Warn("No recipient for email command: {Subject}. Set SendTo on the command or OwnerEmail in BlogConfig.", cmd.Subject);
+                    return;
+                }
+
                 using (var client = new SmtpClient())
                 {
                     var message = new MailMessage
@@ -72,7 +86,7 @@ namespace RaccoonBlog.Web.Infrastructure
                         catch { }
                     }
 
-                    message.To.Add(cmd.SendTo);
+                    message.To.Add(sendTo);
                     client.Send(message);
                 }
 
@@ -114,7 +128,7 @@ namespace RaccoonBlog.Web.Infrastructure
                 store.Subscriptions.Create(new SubscriptionCreationOptions
                 {
                     Name = SubscriptionName,
-                    Query = "from EmailCommands where SendTo != null  and not exists(@metadata.@refresh)",
+                    Query = "from EmailCommands where Subject != null and not exists(@metadata.@refresh)",
                     ChangeVector = "LastDocument"
                 });
                 _log.Info("Created data subscription '{Name}'.", SubscriptionName);

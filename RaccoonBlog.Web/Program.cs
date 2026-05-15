@@ -447,21 +447,22 @@ static void ConfigureRefreshAndGenAiTasks(IDocumentStore store)
                         PostId: this.Post.Id, Timestamp: new Date().toISOString()
                     };
 
-                    var dig = load(digestId) || {
+                    var dig = load(digestId);
+                    if (!dig) {
+                        dig = {
                             Type: 'SpamDigest',
                             View: 'SpamDigest',
                             DigestDate: today,
                             SpamComments: [],
-                            Count: 0,
-                            BlogName: '',
-                            SendTo: ''
-                        }, {
-                            '@collection': 'EmailCommands',
-                            '@refresh': tomorrow.toISOString()
+                            Count: 0
                         };
+                    }
                     dig.SpamComments.push(spamEntry);
                     dig.Count++;
-                    put(digestId, dig);
+                    put(digestId, dig, {
+                        '@collection': 'EmailCommands',
+                        '@refresh': tomorrow.toISOString()
+                    });
                 } else {
                     this.Comments[idx].SpamCheckStatus = 'Valid';
 
@@ -475,6 +476,7 @@ static void ConfigureRefreshAndGenAiTasks(IDocumentStore store)
 
                     var post = load(this.Post.Id);
                     var postTitle = post ? post.Title : '';
+                    var blogConfig = load('Blog/Config');
 
                     put('EmailCommands/new-comment-' + $input.Id, {
                         Type: 'NewComment',
@@ -493,7 +495,7 @@ static void ConfigureRefreshAndGenAiTasks(IDocumentStore store)
                         PostId: this.Post.Id || '',
                         PostTitle: postTitle,
                         PostSlug: post ? post.Slug : '',
-                        BlogName: blogName,
+                        BlogName: blogConfig ? blogConfig.Title : '',
                         Key: post.ShowPostEvenIfPrivate
                     }, {
                         '@collection': 'EmailCommands'
