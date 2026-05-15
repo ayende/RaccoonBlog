@@ -7,12 +7,16 @@ using RaccoonBlog.Web.Helpers;
 using RaccoonBlog.Web.Models;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Session;
+using Raven.Client.Documents.Subscriptions;
+using Raven.Client.Exceptions.Documents.Subscriptions;
 
 namespace RaccoonBlog.Web.Infrastructure
 {
     public static class SocialPostingSubscription
     {
         private static readonly Logger _log = LogManager.GetCurrentClassLogger();
+
+        private const string SubscriptionName = "social-posting";
 
         public const string SocialTag = "social";
         public const string SocialDisableTag = "social-disable";
@@ -26,9 +30,8 @@ namespace RaccoonBlog.Web.Infrastructure
             if (_started) return;
             _started = true;
 
-            // Expects a data subscription named "social-posting" on the Posts collection
-            // to be created in RavenDB Studio before starting the application.
-            var worker = store.Subscriptions.GetSubscriptionWorker<Post>("social-posting");
+            EnsureSubscriptionExists(store);
+            var worker = store.Subscriptions.GetSubscriptionWorker<Post>(SubscriptionName);
 
             worker.AfterAcknowledgment += _ =>
             {
@@ -102,6 +105,23 @@ namespace RaccoonBlog.Web.Infrastructure
         {
             // TODO: Implement Twitter/X API integration.
             _log.Info("Twitter posting not yet implemented for post {PostId}", post.Id);
+        }
+
+        private static void EnsureSubscriptionExists(IDocumentStore store)
+        {
+            try
+            {
+                store.Subscriptions.GetSubscriptionState(SubscriptionName);
+            }
+            catch (SubscriptionDoesNotExistException)
+            {
+                store.Subscriptions.Create(new SubscriptionCreationOptions
+                {
+                    Name = SubscriptionName,
+                    Query = "from Posts"
+                });
+                _log.Info("Created data subscription '{Name}'.", SubscriptionName);
+            }
         }
     }
 }

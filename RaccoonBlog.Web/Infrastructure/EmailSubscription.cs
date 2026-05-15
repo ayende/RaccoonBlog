@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 using NLog;
 using RaccoonBlog.Web.Models;
 using Raven.Client.Documents;
+using Raven.Client.Documents.Subscriptions;
+using Raven.Client.Exceptions.Documents.Subscriptions;
 
 namespace RaccoonBlog.Web.Infrastructure
 {
@@ -12,14 +14,15 @@ namespace RaccoonBlog.Web.Infrastructure
         private static readonly Logger _log = LogManager.GetCurrentClassLogger();
         private static bool _started;
 
+        private const string SubscriptionName = "email-worker";
+
         public static void Start(IDocumentStore store)
         {
             if (_started) return;
             _started = true;
 
-            // Expects a data subscription named "email-worker" on the EmailCommands collection
-            // to be created in RavenDB Studio before starting the application.
-            var worker = store.Subscriptions.GetSubscriptionWorker<SendEmailCommand>("email-worker");
+            EnsureSubscriptionExists(store);
+            var worker = store.Subscriptions.GetSubscriptionWorker<SendEmailCommand>(SubscriptionName);
 
             worker.AfterAcknowledgment += _ =>
             {
@@ -98,6 +101,23 @@ namespace RaccoonBlog.Web.Infrastructure
             }
 
             return $"<p>{cmd.Subject}</p>";
+        }
+
+        private static void EnsureSubscriptionExists(IDocumentStore store)
+        {
+            try
+            {
+                store.Subscriptions.GetSubscriptionState(SubscriptionName);
+            }
+            catch (SubscriptionDoesNotExistException)
+            {
+                store.Subscriptions.Create(new SubscriptionCreationOptions
+                {
+                    Name = SubscriptionName,
+                    Query = "from EmailCommands"
+                });
+                _log.Info("Created data subscription '{Name}'.", SubscriptionName);
+            }
         }
     }
 }
