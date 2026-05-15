@@ -371,20 +371,21 @@ static void ConfigureRefreshAndGenAiTasks(IDocumentStore store)
                 Script = """
                     const post = load(this.Post.Id);
                     for(const comment of this.Comments) {
-                        if(comment.SpamCheckStatus === 'Pending') {
-                            ai.genContext({
-                                Post: {Title: post.Title, Tags: post.Tags},
-                                Id: comment.Id, 
-                                Author: comment.Author, 
-                                Body: comment.Body,
-                                Email: comment.Email,
-                                Url: comment.Url,
-                                UserHostAddress: comment.UserHostAddress, 
-                                UserAgent: comment.UserAgent,
-                                CommenterId: comment.CommenterId,
-                                PostCommentsId: id(this)
-                            });
-                        }
+                        if(comment.SpamCheckStatus !== 'Pending') 
+                            continue;
+
+                        ai.genContext({
+                            Post: {Title: post.Title, Tags: post.Tags},
+                            Id: comment.Id, 
+                            Author: comment.Author, 
+                            Body: comment.Body,
+                            Email: comment.Email,
+                            Url: comment.Url,
+                            UserHostAddress: comment.UserHostAddress, 
+                            UserAgent: comment.UserAgent,
+                            CommenterId: comment.CommenterId,
+                            PostCommentsId: id(this)
+                        });
                     }
                     """
             },
@@ -443,8 +444,11 @@ static void ConfigureRefreshAndGenAiTasks(IDocumentStore store)
                     tomorrow.setHours(8, 0, 0, 0);
 
                     var spamEntry = {
-                        CommentId: $input.Id, Author: $input.Author, Body: $input.Body,
-                        PostId: this.Post.Id, Timestamp: new Date().toISOString()
+                        CommentId: $input.Id, 
+                        Author: $input.Author, 
+                        Body: $input.Body,
+                        PostId: this.Post.Id, 
+                        Timestamp: new Date().toISOString()
                     };
 
                     var dig = load(digestId) || {};
@@ -464,7 +468,7 @@ static void ConfigureRefreshAndGenAiTasks(IDocumentStore store)
 
                     if ($input.CommenterId) {
                         var commenter = load($input.CommenterId);
-                        if (!commenter.IsTrustedCommenter) {
+                        if (commenter !== null && !commenter.IsTrustedCommenter) {
                             commenter.IsTrustedCommenter = true;
                             put($input.CommenterId, commenter);
                         }
@@ -567,18 +571,6 @@ static void ConfigureRefreshAndGenAiTasks(IDocumentStore store)
             GenAiTransformation = new Raven.Client.Documents.Operations.AI.GenAiTransformation
             {
                 Script = """
-                    // Regenerate social text whenever a post is updated.
-                    // On initial deployment, skip the historical backlog.
-                    var metadata = getMetadata(this);
-                    var lastModified = new Date(metadata['@last-modified']);
-
-                    if (this.Social && this.Social.GeneratedAt) {
-                        if (lastModified <= new Date(this.Social.GeneratedAt)) return;
-                    } else {
-                        var cutoff = new Date('2026-05-15T00:00:00Z');
-                        if (lastModified < cutoff) return;
-                    }
-
                     ai.genContext({
                         Title: this.Title,
                         Body: this.Body,
@@ -619,7 +611,7 @@ static void ConfigureRefreshAndGenAiTasks(IDocumentStore store)
                 }
                 """
         };
-        store.Maintenance.Send(new Raven.Client.Documents.Operations.AI.AddGenAiOperation(config));
+        store.Maintenance.Send(new Raven.Client.Documents.Operations.AI.AddGenAiOperation(config, StartingPointChangeVector.LastDocument));
         log.Info("GenAI social media task created.");
     }
     catch (Exception e)
