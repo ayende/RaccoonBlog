@@ -138,7 +138,7 @@
                                 <div class="icomoon-position icon-tag" aria-hidden="true"></div>
                             </div>
                             @{
-                                var tagList = related.Tags.ToList();
+                                var tagList = related.Tags.Where(t => !t.StartsWith("@")).ToList();
                                 var maxTags = 3;
                             }
                             @for (int i = 0; i < tagList.Count; i++)
