@@ -156,12 +156,20 @@ namespace RaccoonBlog.Web.Infrastructure.GenAiTasks
                         }
                         """
                 };
-                store.Maintenance.Send(new AddGenAiOperation(config));
-                _log.Info("GenAI spam filter task created.");
+                try
+                {
+                    store.Maintenance.Send(new AddGenAiOperation(config));
+                    _log.Info("GenAI spam filter task created.");
+                }
+                catch
+                {
+                    store.Maintenance.Send(new UpdateGenAiOperation(config.TaskId, config));
+                    _log.Info("GenAI spam filter task updated.");
+                }
             }
             catch (Exception e)
             {
-                _log.Error(e, "Failed to create GenAI spam filter task.");
+                _log.Error(e, "Failed to create/update GenAI spam filter task.");
             }
         }
     }

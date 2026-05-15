@@ -53,12 +53,20 @@ namespace RaccoonBlog.Web.Infrastructure.GenAiTasks
                         };
                         """
                 };
-                store.Maintenance.Send(new AddGenAiOperation(config));
-                _log.Info("GenAI SEO analysis task created.");
+                try
+                {
+                    store.Maintenance.Send(new AddGenAiOperation(config));
+                    _log.Info("GenAI SEO analysis task created.");
+                }
+                catch
+                {
+                    store.Maintenance.Send(new UpdateGenAiOperation(config.TaskId, config));
+                    _log.Info("GenAI SEO analysis task updated.");
+                }
             }
             catch (Exception e)
             {
-                _log.Error(e, "Failed to create GenAI SEO analysis task.");
+                _log.Error(e, "Failed to create/update GenAI SEO analysis task.");
             }
         }
     }

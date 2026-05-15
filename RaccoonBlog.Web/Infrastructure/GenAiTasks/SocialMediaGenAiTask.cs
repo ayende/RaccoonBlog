@@ -58,12 +58,20 @@ namespace RaccoonBlog.Web.Infrastructure.GenAiTasks
                         getMetadata(this)['@refresh'] = this.PublishAt;
                         """
                 };
-                store.Maintenance.Send(new AddGenAiOperation(config, StartingPointChangeVector.LastDocument));
-                _log.Info("GenAI social media task created.");
+                try
+                {
+                    store.Maintenance.Send(new AddGenAiOperation(config, StartingPointChangeVector.LastDocument));
+                    _log.Info("GenAI social media task created.");
+                }
+                catch
+                {
+                    store.Maintenance.Send(new UpdateGenAiOperation(config.TaskId, config));
+                    _log.Info("GenAI social media task updated.");
+                }
             }
             catch (Exception e)
             {
-                _log.Error(e, "Failed to create GenAI social media task.");
+                _log.Error(e, "Failed to create/update GenAI social media task.");
             }
         }
     }
