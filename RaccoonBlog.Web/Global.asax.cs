@@ -81,6 +81,7 @@ namespace RaccoonBlog.Web
             CreateSeoGenAiTask();
             CreateSocialMediaGenAiTask();
             EmailSubscription.Start();
+            SocialPostingSubscription.Start();
 
 			JobManager.JobException += JobExceptionHandler;
 			JobManager.Initialize(new SocialNetworkIntegrationJobsRegistry());
@@ -353,15 +354,26 @@ this.SeoLastAnalyzedAt = new Date().toISOString();
                     {
                         Script =
 """
-if (!this.Social || !this.Social.GeneratedAt) {
-    if (this.PublishAt && new Date(this.PublishAt) <= new Date()) {
-        ai.genContext({
-            Title: this.Title,
-            Body: this.Body,
-            Tags: this.Tags
-        });
-    }
+// Regenerate social text whenever a post is updated.
+// On initial deployment, skip the historical backlog — only process posts
+// modified after the task was first created (2026-05-15).
+var metadata = getMetadata(this);
+var lastModified = new Date(metadata['@last-modified']);
+
+if (this.Social && this.Social.GeneratedAt) {
+    // Already has social text — only regenerate if post changed since last generation
+    if (lastModified <= new Date(this.Social.GeneratedAt)) return;
+} else {
+    // No social text yet — skip historical posts to avoid processing the entire backlog
+    var cutoff = new Date('2026-05-15T00:00:00Z');
+    if (lastModified < cutoff) return;
 }
+
+ai.genContext({
+    Title: this.Title,
+    Body: this.Body,
+    Tags: this.Tags
+});
 """
                     },
                     Prompt =
@@ -390,6 +402,16 @@ this.Social = this.Social || {};
 this.Social.TwitterText = $output.TwitterText;
 this.Social.RedditTitle = $output.RedditTitle;
 this.Social.GeneratedAt = new Date().toISOString();
+
+// For future posts, schedule a document refresh at publish time.
+// When refresh fires, the social posting subscription picks up the post.
+if (this.PublishAt) {
+    var publishDate = new Date(this.PublishAt);
+    if (publishDate > new Date()) {
+        var metadata = getMetadata(this);
+        metadata['@refresh'] = this.PublishAt;
+    }
+}
 """
                 };
                 DocumentStore.Maintenance.Send(new AddGenAiOperation(config));

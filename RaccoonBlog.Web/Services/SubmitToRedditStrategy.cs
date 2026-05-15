@@ -73,7 +73,7 @@ namespace RaccoonBlog.Web.Services
             SubmitPosts(posts);
         }
 
-        private void SubmitPosts(IList<Post> posts)
+        public void SubmitPosts(IList<Post> posts)
         {
             var subreddits = _subredditNames.Select(sr => _reddit.GetSubreddit(sr)).ToList();
 

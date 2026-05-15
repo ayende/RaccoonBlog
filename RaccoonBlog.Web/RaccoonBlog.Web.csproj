@@ -356,6 +356,7 @@
     <Compile Include="Infrastructure\Jobs\RedditIntegration.cs" />
     <Compile Include="Infrastructure\Jobs\SocialNetworkIntegrationJobsRegistry.cs" />
     <Compile Include="Infrastructure\EmailSubscription.cs" />
+    <Compile Include="Infrastructure\SocialPostingSubscription.cs" />
     <Compile Include="LegacyPostController.generated.cs">
       <DependentUpon>T4MVC.tt</DependentUpon>
     </Compile>
