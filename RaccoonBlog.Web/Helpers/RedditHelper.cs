@@ -39,8 +39,9 @@ namespace RaccoonBlog.Web.Helpers
         {
             return documentSession.Query<Post>()
                 .Where(x => x.PublishAt <= currentDateTimeOffset &&
-                            x.TagsAsSlugs.Any(t => t == SendToRedditTag) &&
-                            (x.Integration == null || 
+                            x.TagsAsSlugs.Any(t => t == SendToRedditTag || t == "social" || t == "social-reddit") &&
+                            (x.Social == null || x.Social.DisableAutoPublish == false) && !x.TagsAsSlugs.Any(t => t == "social-disable") &&
+                            (x.Integration == null ||
                              x.Integration.Reddit == null ||
                              x.Integration.Reddit.Submitted == false))
                 .OrderBy(x => x.PublishAt)
@@ -51,11 +52,11 @@ namespace RaccoonBlog.Web.Helpers
         {
             return documentSession.Query<Post>()
                 .Where(x => x.PublishAt <= currentDateTimeOffset &&
-                            x.TagsAsSlugs.Any(t => t == SendToRedditTag) &&
+                            x.TagsAsSlugs.Any(t => t == SendToRedditTag || t == "social" || t == "social-reddit") &&
                             (x.Integration != null &&
                              x.Integration.Reddit != null ||
                              x.Integration.Reddit.PostSubmissions.Any(
-                                 s => s.Status == Reddit.SubmissionStatus.CaptchaFailure || 
+                                 s => s.Status == Reddit.SubmissionStatus.CaptchaFailure ||
                                       s.Status == Reddit.SubmissionStatus.UnknownFailure)))
                 .OrderBy(x => x.PublishAt)
                 .ToList();
