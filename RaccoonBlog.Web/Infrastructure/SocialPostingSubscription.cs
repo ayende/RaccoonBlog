@@ -13,12 +13,13 @@ namespace RaccoonBlog.Web.Infrastructure
     /// RavenDB subscription worker that handles social media posting for blog posts.
     /// Replaces the FluentScheduler polling approach with a reactive subscription.
     /// Posts are submitted when they are published, have AI-generated social text, and are tagged
-    /// with the appropriate platform tag ("reddit", "twitter").
+    /// with "social". The old "reddit" tag is also honored for backward compatibility.
     /// Future posts are handled via @refresh metadata set by the social GenAI UpdateScript.
     /// </summary>
     public static class SocialPostingSubscription
     {
         private static readonly Logger _log = LogManager.GetCurrentClassLogger();
+        public const string SocialTag = "social";
         private static bool _started;
 
         public static void Start()
@@ -66,12 +67,11 @@ namespace RaccoonBlog.Web.Infrastructure
                 return;
 
             var tags = post.TagsAsSlugs ?? new List<string>();
+            if (!tags.Contains(SocialTag))
+                return;
 
-            if (tags.Contains(RedditHelper.SendToRedditTag))
-                TryPostToReddit(post);
-
-            if (tags.Contains("twitter"))
-                TryPostToTwitter(post);
+            TryPostToReddit(post);
+            TryPostToTwitter(post);
         }
 
         private static void TryPostToReddit(Post post)
