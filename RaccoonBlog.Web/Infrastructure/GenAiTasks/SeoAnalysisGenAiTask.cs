@@ -46,9 +46,11 @@ namespace RaccoonBlog.Web.Infrastructure.GenAiTasks
                         }
                         """,
                     UpdateScript = """
-                        this.SeoMetaDescription = $output.MetaDescription;
-                        this.SeoKeywords = $output.Keywords;
-                        this.SeoLastAnalyzedAt = new Date().toISOString();
+                        this.Seo = {
+                            MetaDescription: $output.MetaDescription,
+                            Keywords: $output.Keywords,
+                            LastAnalyzedAt: new Date().toISOString()
+                        };
                         """
                 };
                 store.Maintenance.Send(new AddGenAiOperation(config));

@@ -42,9 +42,7 @@ namespace RaccoonBlog.Web.Models
 
 		public SocialMedia Social { get; set; }
 
-		public string SeoMetaDescription { get; set; }
-		public ICollection<string> SeoKeywords { get; set; }
-		public DateTimeOffset? SeoLastAnalyzedAt { get; set; }
+		public SeoMetadata Seo { get; set; }
 
 		private Guid _showPostEvenIfPrivate;
 		public Guid ShowPostEvenIfPrivate

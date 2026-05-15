@@ -22,7 +22,9 @@ namespace RaccoonBlog.Web.Infrastructure.AutoMapper.Profiles
 				.ForMember(x => x.Title, o => o.MapFrom(m => WebUtility.HtmlDecode(m.Title)))
 				.ForMember(x => x.Author, o => o.Ignore())
 				.ForMember(x => x.Body, o => o.MapFrom(m => new HtmlString(ImageUrlRewriter.RewriteImageUrls(m.Body))))
-				.ForMember(x => x.SeoKeywords, o => o.MapFrom(m => m.SeoKeywords))
+				.ForMember(x => x.SeoMetaDescription, o => o.MapFrom(m => m.Seo != null ? m.Seo.MetaDescription : null))
+				.ForMember(x => x.SeoKeywords, o => o.MapFrom(m => m.Seo != null ? m.Seo.Keywords : null))
+				.ForMember(x => x.SeoLastAnalyzedAt, o => o.MapFrom(m => m.Seo != null ? m.Seo.LastAnalyzedAt : null))
 				.ForMember(x => x.Tags, o => o.MapFrom(m => m.Tags.Where(t => !t.StartsWith("@"))))
 				;
 
