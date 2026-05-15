@@ -88,6 +88,9 @@ namespace RaccoonBlog.Web.Models
         [Display(Name = "Reddit Subreddits To Submit To On Publish - comma-separated e.g. /r/test,/r/example")]
         public string RedditSubredditsToSubmitToOnPublish { get; set; }
 
+        [Display(Name = "Twitter Bearer Token")]
+        public string TwitterBearerToken { get; set; }
+
         public static BlogConfig New()
         {
             return new BlogConfig

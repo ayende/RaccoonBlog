@@ -162,6 +162,14 @@ namespace RaccoonBlog.Web.Controllers
             if (ModelState.IsValid == false)
                 return PostingCommentFailed(post, input, key);
 
+            // Silently reject comments from repeat spam offenders
+            // Show success to the user but don't actually save the comment
+            if (commenter != null && commenter.NumberOfSpamComments > 4 && !User.Identity.IsAuthenticated)
+            {
+                CommenterUtil.SetCommenterCookie(Response, input.CommenterKey);
+                return PostingCommentSucceeded(post, input);
+            }
+
             // Create or update commenter
             var newCommenter = commenter ?? new Commenter { Key = Guid.Parse(input.CommenterKey) };
             newCommenter.IsTrustedCommenter = commenter?.IsTrustedCommenter;

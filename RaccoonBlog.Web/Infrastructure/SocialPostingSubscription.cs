@@ -62,13 +62,17 @@ namespace RaccoonBlog.Web.Infrastructure
         private static void ProcessPost(IDocumentStore store, Post post)
         {
             if (post.PublishAt > DateTimeOffset.UtcNow)
+            {
+                // Set @refresh so we get triggered when the post goes live
+                using var session = store.OpenSession();
+                var metadata = session.Advanced.GetMetadataFor(session.Load<Post>(post.Id));
+                if (metadata != null && !metadata.ContainsKey("@refresh"))
+                {
+                    metadata["@refresh"] = post.PublishAt.ToString("o");
+                    session.SaveChanges();
+                }
                 return;
-
-            if (post.Social?.GeneratedAt == null)
-                return;
-
-            if (post.Social.DisableAutoPublish)
-                return;
+            }
 
             var tags = (post.TagsAsSlugs ?? Enumerable.Empty<string>()).ToList();
 
@@ -86,7 +90,7 @@ namespace RaccoonBlog.Web.Infrastructure
                 TryPostToReddit(store, post);
 
             if (hasTwitter)
-                TryPostToTwitter(post);
+                TryPostToTwitter(store, post);
         }
 
         private static void TryPostToReddit(IDocumentStore store, Post post)
@@ -97,13 +101,45 @@ namespace RaccoonBlog.Web.Infrastructure
             // TODO: Reddit integration is currently disabled in .NET 8 migration
             // (SubmitToRedditStrategy is wrapped in #if FALSE).
             // Re-enable when RedditSharp 2.0+ API is integrated.
-            _log.Info("Reddit posting pending RedditSharp migration for post {PostId}", post.Id);
+            _log.Warn("Reddit posting disabled (pending RedditSharp 2.0 migration) for post {PostId}", post.Id);
         }
 
-        private static void TryPostToTwitter(Post post)
+        private static void TryPostToTwitter(IDocumentStore store, Post post)
         {
-            // TODO: Implement Twitter/X API integration.
-            _log.Info("Twitter posting not yet implemented for post {PostId}", post.Id);
+            try
+            {
+                using var session = store.OpenSession();
+                var blogConfig = session.Load<BlogConfig>("Blog/Config");
+
+                if (string.IsNullOrEmpty(blogConfig?.TwitterBearerToken))
+                {
+                    _log.Info("Twitter bearer token not configured, skipping post {PostId}", post.Id);
+                    return;
+                }
+
+                var postUrl = PostHelper.Url(post);
+                var tweetText = post.Social.TwitterText + " " + postUrl;
+
+                using var client = new System.Net.Http.HttpClient();
+                client.DefaultRequestHeaders.Authorization =
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", blogConfig.TwitterBearerToken);
+
+                var content = new System.Net.Http.StringContent(
+                    System.Text.Json.JsonSerializer.Serialize(new { text = tweetText }),
+                    System.Text.Encoding.UTF8,
+                    "application/json");
+
+                var response = client.PostAsync("https://api.x.com/2/tweets", content).Result;
+
+                if (response.IsSuccessStatusCode)
+                    _log.Info("Tweet posted for {PostId}", post.Id);
+                else
+                    _log.Warn("Twitter API error for {PostId}: {Status}", post.Id, response.StatusCode);
+            }
+            catch (Exception e)
+            {
+                _log.Error(e, "Failed to post tweet for {PostId}", post.Id);
+            }
         }
 
         private static void EnsureSubscriptionExists(IDocumentStore store)
@@ -117,7 +153,7 @@ namespace RaccoonBlog.Web.Infrastructure
                 store.Subscriptions.Create(new SubscriptionCreationOptions
                 {
                     Name = SubscriptionName,
-                    Query = "from Posts where Social.GeneratedAt != null and not exists(@metadata.@refresh)",
+                    Query = "from Posts where Social.GeneratedAt != null and (Social.DisableAutoPublish == false or Social.DisableAutoPublish == null) and not exists(@metadata.@refresh)",
                     ChangeVector = "LastDocument"
                 });
                 _log.Info("Created data subscription '{Name}'.", SubscriptionName);

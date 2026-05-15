@@ -48,6 +48,10 @@
     @Html.EditorFor(x => x.RedditSubredditsToSubmitToOnPublish, "TextLong", new { placeholder = "e.g. /r/test,/r/programming" })
     <hr />
 
+    <h4>Twitter/X integration</h4>
+    @Html.EditorFor(x => x.TwitterBearerToken, "TextLong")
+    <hr />
+
     <div class="form-group">
         <div class="col-sm-12">
             <button type="submit" class="btn btn-primary pull-right">Save</button>

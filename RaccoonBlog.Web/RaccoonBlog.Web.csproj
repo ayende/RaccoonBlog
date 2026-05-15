@@ -92,6 +92,7 @@
     <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
     <PackageReference Include="RedditSharp" Version="2.0.0" />
     
+    <PackageReference Include="Scriban" Version="7.2.0" />
     <PackageReference Include="RavenDB.Client" Version="7.2.1" />
     <PackageReference Include="WilderMinds.MetaWeblog" Version="5.1.3" />
 
