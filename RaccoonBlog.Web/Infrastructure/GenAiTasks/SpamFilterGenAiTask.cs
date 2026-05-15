@@ -107,17 +107,14 @@ namespace RaccoonBlog.Web.Infrastructure.GenAiTasks
                             };
 
                             var dig = load(digestId) || {};
-                            dig.Type = 'SpamDigest';
-                            dig.View = 'SpamDigest';
-                            dig.DigestDate = today;
                             dig.SpamComments = dig.SpamComments || [];
                             dig.Count = dig.Count || 0;
                             dig.SpamComments.push(spamEntry);
                             dig.Count++;
-                            put(digestId, dig, {
-                                '@collection': 'EmailCommands',
-                                '@refresh': tomorrow.toISOString()
-                            });
+                            dig['@metadata'] = dig['@metadata'] || {};
+                            dig['@metadata']['@collection'] = 'EmailCommands';
+                            dig['@metadata']['@refresh'] = tomorrow.toISOString();
+                            put(digestId, dig);
                         } else {
                             this.Comments[idx].SpamCheckStatus = 'Valid';
 
@@ -132,7 +129,7 @@ namespace RaccoonBlog.Web.Infrastructure.GenAiTasks
                             var post = load(this.Post.Id);
                             var postTitle = post ? post.Title : '';
 
-                            put('EmailCommands/new-comment-' + $input.Id, {
+                            var emailCmd = {
                                 Type: 'NewComment',
                                 View: 'NewComment',
                                 ReplyTo: $input.Email || '',
@@ -149,10 +146,10 @@ namespace RaccoonBlog.Web.Infrastructure.GenAiTasks
                                 PostId: this.Post.Id || '',
                                 PostTitle: postTitle,
                                 PostSlug: post ? post.Slug : '',
-                                Key: post.ShowPostEvenIfPrivate
-                            }, {
-                                '@collection': 'EmailCommands'
-                            });
+                                Key: post.ShowPostEvenIfPrivate,
+                                '@metadata': { '@collection': 'EmailCommands' }
+                            };
+                            put('EmailCommands/new-comment-' + $input.Id, emailCmd);
                         }
                         """
                 };
