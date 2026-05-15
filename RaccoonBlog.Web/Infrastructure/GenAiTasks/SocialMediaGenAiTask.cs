@@ -55,13 +55,7 @@ namespace RaccoonBlog.Web.Infrastructure.GenAiTasks
                         this.Social.RedditTitle = $output.RedditTitle;
                         this.Social.GeneratedAt = new Date().toISOString();
 
-                        if (this.PublishAt) {
-                            var publishDate = new Date(this.PublishAt);
-                            if (publishDate > new Date()) {
-                                var metadata = getMetadata(this);
-                                metadata['@refresh'] = this.PublishAt;
-                            }
-                        }
+                        getMetadata(this)['@refresh'] = this.PublishAt;
                         """
                 };
                 store.Maintenance.Send(new AddGenAiOperation(config, StartingPointChangeVector.LastDocument));

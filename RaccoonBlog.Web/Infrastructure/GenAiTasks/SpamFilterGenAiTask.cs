@@ -106,14 +106,17 @@ namespace RaccoonBlog.Web.Infrastructure.GenAiTasks
                                 Timestamp: new Date().toISOString()
                             };
 
-                            var dig = load(digestId) || {};
-                            dig.SpamComments = dig.SpamComments || [];
-                            dig.Count = dig.Count || 0;
-                            dig.SpamComments.push(spamEntry);
+                            var dig = load(digestId) || {
+                                SpamComments: [],
+                                Count: 0,
+                                '@metadata': {
+                                    '@refresh': tomorrow.toISOString(),
+                                    '@collection': 'EmailCommands'
+                                }
+                            };
                             dig.Count++;
-                            dig['@metadata'] = dig['@metadata'] || {};
-                            dig['@metadata']['@collection'] = 'EmailCommands';
-                            dig['@metadata']['@refresh'] = tomorrow.toISOString();
+                            dig.SpamComments.push(spamEntry);
+                          
                             put(digestId, dig);
                         } else {
                             this.Comments[idx].SpamCheckStatus = 'Valid';
