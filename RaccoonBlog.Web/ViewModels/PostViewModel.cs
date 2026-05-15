@@ -48,6 +48,10 @@ namespace RaccoonBlog.Web.ViewModels
             public ICollection<TagDetails> Tags { get; set; }
 
             public UserDetails Author { get; set; }
+
+            public string SeoMetaDescription { get; set; }
+            public ICollection<string> SeoKeywords { get; set; }
+            public DateTimeOffset? SeoLastAnalyzedAt { get; set; }
         }
 
         public class UserDetails

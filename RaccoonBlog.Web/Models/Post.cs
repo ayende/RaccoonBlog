@@ -40,6 +40,12 @@ namespace RaccoonBlog.Web.Models
 
         public SocialNetworkIntegration Integration { get; set; }
 
+		public SocialMedia Social { get; set; }
+
+		public string SeoMetaDescription { get; set; }
+		public ICollection<string> SeoKeywords { get; set; }
+		public DateTimeOffset? SeoLastAnalyzedAt { get; set; }
+
 		private Guid _showPostEvenIfPrivate;
 		public Guid ShowPostEvenIfPrivate
 		{
@@ -119,6 +125,16 @@ namespace RaccoonBlog.Web.Models
 
 		[Display(Name = "Allow Comments")]
 		public bool AllowComments { get; set; }
+
+		[Display(Name = "SEO Meta Description")]
+		[DataType(DataType.MultilineText)]
+		public string SeoMetaDescription { get; set; }
+
+		[Display(Name = "SEO Keywords")]
+		public string SeoKeywords { get; set; }
+
+		[Display(Name = "SEO Last Analyzed")]
+		public DateTimeOffset? SeoLastAnalyzedAt { get; set; }
 
 		public bool IsNewPost()
 		{

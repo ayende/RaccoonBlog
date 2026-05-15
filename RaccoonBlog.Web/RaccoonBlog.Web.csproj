@@ -6,13 +6,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- External reference DLL -->
-    <Reference Include="Joel.Net.Akismet">
-      <HintPath>..\Libs\Joel.Net.Akismet\Joel.Net.Akismet.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
-  <ItemGroup>
     <!-- Exclude files not needed -->
     <Compile Remove="ViewModels\BlogConfigurationInput.cs" />
     

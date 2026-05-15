@@ -4,6 +4,13 @@ using System.Linq;
 
 namespace RaccoonBlog.Web.Models
 {
+	public enum SpamCheckStatus
+	{
+		Pending,
+		Valid,
+		Spam
+	}
+
 	public class PostComments
 	{
         public PostComments()
@@ -49,6 +56,7 @@ namespace RaccoonBlog.Web.Models
 
 			public bool Important { get; set; }
 			public bool IsSpam { get; set; }
+			public SpamCheckStatus SpamCheckStatus { get; set; }
 
 			public DateTimeOffset CreatedAt { get; set; }
 

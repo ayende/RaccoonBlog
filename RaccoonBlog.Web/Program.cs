@@ -122,7 +122,6 @@ builder.Services.AddHttpClient<Recaptcha2Verifier>(client => {
 });
 builder.Services.AddScoped<Recaptcha2Helper>();
 builder.Services.AddScoped<RaccoonBlog.Web.Helpers.SignInHelper>();
-builder.Services.AddScoped<IAkismetService, AkismetService>();
 // Configure RavenDB DocumentStore
 var ravenUrls = builder.Configuration["Raven:Urls"]?.Split(',', StringSplitOptions.RemoveEmptyEntries) ?? new[] { "http://localhost:8080" };
 var ravenDatabase = builder.Configuration["Raven:Database"] ?? "blog.ayende.com";
@@ -156,7 +155,10 @@ if (int.TryParse(builder.Configuration["Raven:RequestsTimeoutInSec"], out int ti
 }
 
 documentStore.Initialize();
-HibernatingRhinos.Loci.Common.Tasks.TaskExecutor.DocumentStore = documentStore;
+
+// Configure GenAI tasks and subscriptions
+ConfigureRefreshAndGenAiTasks(documentStore);
+
 builder.Services.AddSingleton<IDocumentStore>(documentStore);
 
 builder.Services.AddDataProtection()
@@ -340,6 +342,278 @@ app.MapControllerRoute(
 app.UseMetaWeblog("/Services/MetaWeblogAPI.ashx");
     
 app.Run();
+
+static void ConfigureRefreshAndGenAiTasks(IDocumentStore store)
+{
+    var log = LogManager.GetCurrentClassLogger();
+
+    // Enable document refresh (needed for future post @refresh triggers)
+    try
+    {
+        var refreshConfig = new Raven.Client.Documents.Operations.Refresh.RefreshConfiguration
+        {
+            Disabled = false,
+            RefreshFrequencyInSec = 60,
+            MaxItemsToProcess = 500
+        };
+        store.Maintenance.Send(new Raven.Client.Documents.Operations.Refresh.ConfigureRefreshOperation(refreshConfig));
+        log.Info("Document refresh enabled.");
+    }
+    catch (Exception e)
+    {
+        log.Error(e, "Failed to configure refresh.");
+    }
+
+    // All GenAI tasks expect an AI connection string named "ai-chat" to be configured
+    // in RavenDB Studio before starting the application. The connection string should point
+    // to a chat-capable model (e.g., OpenAI gpt-4o-mini or equivalent).
+
+    // GenAI spam filter task on PostComments collection
+    try
+    {
+        var config = new Raven.Client.Documents.Operations.AI.GenAiConfiguration
+        {
+            Name = "spam-filter",
+            Identifier = "spam-filter",
+            ConnectionStringName = "ai-chat",
+            Disabled = false,
+            Collection = "PostComments",
+            GenAiTransformation = new Raven.Client.Documents.Operations.AI.GenAiTransformation
+            {
+                Script = @"
+for(const comment of this.Comments) {
+    if(comment.SpamCheckStatus === 'Pending') {
+        ai.genContext({
+            Id: comment.Id, Author: comment.Author, Body: comment.Body,
+            Email: comment.Email, Url: comment.Url,
+            UserHostAddress: comment.UserHostAddress, UserAgent: comment.UserAgent,
+            CommenterId: comment.CommenterId
+        });
+    }
+}"
+            },
+            Prompt = @"
+You are a spam filter for a technical blog. Analyze this blog comment.
+A spam comment typically includes irrelevant or promotional content,
+excessive links, misleading information, or advertising intent.
+A legitimate comment engages with the post, asks relevant questions,
+or provides constructive feedback.
+
+Respond with JSON: { 'IsSpam': bool, 'Reason': 'brief explanation' }",
+            SampleObject = @"{ ""IsSpam"": true, ""Reason"": ""Promotional content with link"" }",
+            UpdateScript = @"
+const idx = this.Comments.findIndex(c => c.Id == $input.Id);
+if (idx < 0) return;
+
+if ($output.IsSpam) {
+    var c = this.Comments[idx];
+    c.IsSpam = true;
+    c.SpamCheckStatus = 'Spam';
+    this.Comments.splice(idx, 1);
+    this.Spam.push(c);
+
+    var post = load(this.Post.Id);
+    if (post) {
+        post.CommentsCount--;
+        if (post.CommentsCount < 0) post.CommentsCount = 0;
+    }
+
+    var today = new Date().toISOString().split('T')[0];
+    var digestId = 'SpamDigests/' + today;
+    var tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(8, 0, 0, 0);
+
+    var spamEntry = {
+        CommentId: $input.Id, Author: $input.Author, Body: $input.Body,
+        PostId: this.Post.Id, Timestamp: new Date().toISOString()
+    };
+
+    var dig = load(digestId);
+    if (dig) {
+        dig.SpamComments.push(spamEntry);
+        dig.Count++;
+        put(digestId, dig);
+    } else {
+        put(digestId, {
+            Type: 'SpamDigest',
+            View: 'SpamDigest',
+            DigestDate: today,
+            SpamComments: [spamEntry],
+            Count: 1,
+            BlogName: '',
+            SendTo: ''
+        }, {
+            '@collection': 'EmailCommands',
+            '@refresh': tomorrow.toISOString()
+        });
+    }
+} else {
+    this.Comments[idx].SpamCheckStatus = 'Valid';
+
+    if ($input.CommenterId) {
+        var commenter = load($input.CommenterId);
+        if (commenter) {
+            commenter.IsTrustedCommenter = true;
+        }
+    }
+
+    var blogConfig = load('Blog/Config');
+    var blogName = blogConfig ? blogConfig.Title : '';
+    var ownerEmail = blogConfig ? blogConfig.OwnerEmail : '';
+
+    var post = load(this.Post.Id);
+    var postTitle = post ? post.Title : '';
+
+    put('EmailCommands/new-comment-' + $input.Id, {
+        Type: 'NewComment',
+        View: 'NewComment',
+        ReplyTo: $input.Email || '',
+        Subject: 'Comment on: ' + postTitle + ' from ' + $input.Author,
+        SendTo: ownerEmail,
+        CommentId: $input.Id,
+        Author: $input.Author || '',
+        CommentBody: $input.Body || '',
+        CommentEmail: $input.Email || '',
+        CommentUrl: $input.Url || '',
+        CreatedAt: new Date().toISOString(),
+        IpAddress: $input.UserHostAddress || '',
+        UserAgent: $input.UserAgent || '',
+        CommenterId: $input.CommenterId || '',
+        PostId: this.Post.Id || '',
+        PostTitle: postTitle,
+        PostSlug: post ? post.Slug : '',
+        BlogName: blogName,
+        Key: post && post.ShowPostEvenIfPrivate ? post.ShowPostEvenIfPrivate.toString() : ''
+    }, {
+        '@collection': 'EmailCommands'
+    });
+}"
+        };
+        store.Maintenance.Send(new Raven.Client.Documents.Operations.AI.AddGenAiOperation(config));
+        log.Info("GenAI spam filter task created.");
+    }
+    catch (Exception e)
+    {
+        log.Error(e, "Failed to create GenAI spam filter task.");
+    }
+
+    // GenAI SEO analysis task on Posts collection
+    try
+    {
+        var config = new Raven.Client.Documents.Operations.AI.GenAiConfiguration
+        {
+            Name = "SEO Analysis",
+            Identifier = "seo-analysis",
+            ConnectionStringName = "ai-chat",
+            Disabled = false,
+            Collection = "Posts",
+            GenAiTransformation = new Raven.Client.Documents.Operations.AI.GenAiTransformation
+            {
+                Script = @"
+ai.genContext({
+    Title: this.Title,
+    Body: this.Body,
+    Tags: this.Tags
+});"
+            },
+            Prompt = @"
+You are an expert SEO analyst. Analyze the blog post provided and generate:
+
+1. A compelling meta description (max 160 characters) that accurately summarizes the post and includes relevant keywords to improve search engine ranking. Write for humans, not search engines.
+
+2. A list of 3-8 SEO keywords/keyphrases relevant to the post content. These should be terms people would search for to find this content. Include both short-tail and long-tail keywords where appropriate.
+
+The post content is provided below. Analyze the title, body text, and existing tags.",
+            SampleObject = @"{
+    ""MetaDescription"": ""A concise, compelling meta description under 160 characters."",
+    ""Keywords"": [ ""primary keyword"", ""secondary keyword phrase"", ""related term"" ]
+}",
+            UpdateScript = @"
+this.SeoMetaDescription = $output.MetaDescription;
+this.SeoKeywords = $output.Keywords;
+this.SeoLastAnalyzedAt = new Date().toISOString();"
+        };
+        store.Maintenance.Send(new Raven.Client.Documents.Operations.AI.AddGenAiOperation(config));
+        log.Info("GenAI SEO analysis task created.");
+    }
+    catch (Exception e)
+    {
+        log.Error(e, "Failed to create GenAI SEO analysis task.");
+    }
+
+    // GenAI social media text generation task on Posts collection
+    try
+    {
+        var config = new Raven.Client.Documents.Operations.AI.GenAiConfiguration
+        {
+            Name = "social-media",
+            Identifier = "social-media",
+            ConnectionStringName = "ai-chat",
+            Disabled = false,
+            Collection = "Posts",
+            GenAiTransformation = new Raven.Client.Documents.Operations.AI.GenAiTransformation
+            {
+                Script = @"
+// Regenerate social text whenever a post is updated.
+// On initial deployment, skip the historical backlog.
+var metadata = getMetadata(this);
+var lastModified = new Date(metadata['@last-modified']);
+
+if (this.Social && this.Social.GeneratedAt) {
+    if (lastModified <= new Date(this.Social.GeneratedAt)) return;
+} else {
+    var cutoff = new Date('2026-05-15T00:00:00Z');
+    if (lastModified < cutoff) return;
+}
+
+ai.genContext({
+    Title: this.Title,
+    Body: this.Body,
+    Tags: this.Tags
+});"
+            },
+            Prompt = @"
+You are a social media manager for a technical blog about software development,
+databases, and distributed systems. Generate engaging social media text for the
+blog post provided.
+
+1. Twitter: A concise, engaging tweet (max 250 characters, excluding URL which
+   will be appended automatically). Should hook technical readers. Include 1-2
+   relevant hashtags if natural. Do not include a URL.
+
+2. Reddit: A compelling submission title for a programming subreddit audience.
+   Should be informative and spark discussion. No clickbait. Max 300 characters.",
+            SampleObject = @"{
+    ""TwitterText"": ""Concise engaging tweet text with #relevantHashtag"",
+    ""RedditTitle"": ""Compelling Reddit submission title for technical audience""
+}",
+            UpdateScript = @"
+this.Social = this.Social || {};
+this.Social.TwitterText = $output.TwitterText;
+this.Social.RedditTitle = $output.RedditTitle;
+this.Social.GeneratedAt = new Date().toISOString();
+
+if (this.PublishAt) {
+    var publishDate = new Date(this.PublishAt);
+    if (publishDate > new Date()) {
+        var metadata = getMetadata(this);
+        metadata['@refresh'] = this.PublishAt;
+    }
+}"
+        };
+        store.Maintenance.Send(new Raven.Client.Documents.Operations.AI.AddGenAiOperation(config));
+        log.Info("GenAI social media task created.");
+    }
+    catch (Exception e)
+    {
+        log.Error(e, "Failed to create GenAI social media task.");
+    }
+
+    // Start subscription workers
+    RaccoonBlog.Web.Infrastructure.EmailSubscription.Start(store);
+    RaccoonBlog.Web.Infrastructure.SocialPostingSubscription.Start(store);
+}
 
 // Custom JSON TempData Serializer to replace BSON serializer
 public class JsonTempDataSerializer : TempDataSerializer

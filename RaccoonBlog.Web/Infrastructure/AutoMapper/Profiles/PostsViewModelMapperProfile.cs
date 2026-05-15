@@ -1,3 +1,4 @@
+using System.Linq;
 using AutoMapper;
 using Microsoft.AspNetCore.Html;
 using RaccoonBlog.Web.Infrastructure.AutoMapper.Profiles.Resolvers;
@@ -23,6 +24,7 @@ namespace RaccoonBlog.Web.Infrastructure.AutoMapper.Profiles
 				.ForMember(x=>x.Title, o => o.MapFrom(m => System.Net.WebUtility.HtmlDecode(m.Title)))
 				.ForMember(x => x.Body, o => o.MapFrom(m => new HtmlString(ImageUrlRewriter.RewriteImageUrls(m.Body))))
 				.ForMember(x => x.IsSerie, o => o.MapFrom(m => m.Title.Contains(":")))
+				.ForMember(x => x.Tags, o => o.MapFrom(m => m.Tags.Where(t => !t.StartsWith("@"))))
 				;
 
 			CreateMap<User, PostsViewModel.PostSummary.UserDetails>();

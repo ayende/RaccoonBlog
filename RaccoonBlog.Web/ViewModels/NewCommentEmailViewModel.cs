@@ -21,5 +21,6 @@ namespace RaccoonBlog.Web.ViewModels
 		public string CommenterId { get; set; }
         public string IpAddress { get; set; }
         public string UserAgent { get; set; }
+		public string SpamCheckStatus { get; set; }
 	}
 }

@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Net;
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Http;
@@ -21,6 +22,8 @@ namespace RaccoonBlog.Web.Infrastructure.AutoMapper.Profiles
 				.ForMember(x => x.Title, o => o.MapFrom(m => WebUtility.HtmlDecode(m.Title)))
 				.ForMember(x => x.Author, o => o.Ignore())
 				.ForMember(x => x.Body, o => o.MapFrom(m => new HtmlString(ImageUrlRewriter.RewriteImageUrls(m.Body))))
+				.ForMember(x => x.SeoKeywords, o => o.MapFrom(m => m.SeoKeywords))
+				.ForMember(x => x.Tags, o => o.MapFrom(m => m.Tags.Where(t => !t.StartsWith("@"))))
 				;
 
 			CreateMap<PostComments.Comment, PostViewModel.Comment>()
@@ -36,7 +39,7 @@ namespace RaccoonBlog.Web.Infrastructure.AutoMapper.Profiles
 				.ForMember(x => x.Title, o => o.MapFrom(m => WebUtility.HtmlDecode(m.Title)))
 				.ForMember(x => x.Slug, o => o.Ignore())
 				.ForMember(x => x.PublishedAt, o => o.MapFrom(m => m.PublishAt))
-				.ForMember(x => x.Tags, o => o.MapFrom(m => m.Tags))
+				.ForMember(x => x.Tags, o => o.MapFrom(m => m.Tags.Where(t => !t.StartsWith("@"))))
 				;
 			
 			CreateMap<Commenter, CommentInput>()
