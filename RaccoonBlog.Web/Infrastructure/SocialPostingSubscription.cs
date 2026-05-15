@@ -19,7 +19,17 @@ namespace RaccoonBlog.Web.Infrastructure
     public static class SocialPostingSubscription
     {
         private static readonly Logger _log = LogManager.GetCurrentClassLogger();
+
+        // Tag conventions (stored as slugs after SlugConverter):
+        //   @social           → "social"           — post to all platforms
+        //   @social/reddit    → "social-reddit"    — post to Reddit only
+        //   @social/twitter   → "social-twitter"   — post to Twitter only
+        //   @social/disable   → "social-disable"   — explicitly disable social posting
         public const string SocialTag = "social";
+        public const string SocialDisableTag = "social-disable";
+        public const string SocialRedditTag = "social-reddit";
+        public const string SocialTwitterTag = "social-twitter";
+
         private static bool _started;
 
         public static void Start()
@@ -66,12 +76,25 @@ namespace RaccoonBlog.Web.Infrastructure
             if (post.Social.DisableAutoPublish)
                 return;
 
-            var tags = post.TagsAsSlugs ?? new List<string>();
-            if (!tags.Contains(SocialTag))
+            var tags = (post.TagsAsSlugs ?? Enumerable.Empty<string>()).ToList();
+
+            // Must have at least one social tag
+            bool hasSocialAll = tags.Contains(SocialTag);
+            bool hasReddit = hasSocialAll || tags.Contains(SocialRedditTag);
+            bool hasTwitter = hasSocialAll || tags.Contains(SocialTwitterTag);
+
+            if (!hasReddit && !hasTwitter)
                 return;
 
-            TryPostToReddit(post);
-            TryPostToTwitter(post);
+            // @social/disable kills everything
+            if (tags.Contains(SocialDisableTag))
+                return;
+
+            if (hasReddit)
+                TryPostToReddit(post);
+
+            if (hasTwitter)
+                TryPostToTwitter(post);
         }
 
         private static void TryPostToReddit(Post post)

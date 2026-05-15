@@ -39,8 +39,9 @@ namespace RaccoonBlog.Web.Helpers
         {
             return documentSession.Query<Post>()
                 .Where(x => x.PublishAt <= currentDateTimeOffset &&
-                            x.TagsAsSlugs.Any(t => t == SendToRedditTag || t == "social") &&
+                            x.TagsAsSlugs.Any(t => t == SendToRedditTag || t == "social" || t == "social-reddit") &&
                             (x.Social == null || x.Social.DisableAutoPublish == false) &&
+                            !x.TagsAsSlugs.Any(t => t == "social-disable") &&
                             (x.Integration == null ||
                              x.Integration.Reddit == null ||
                              x.Integration.Reddit.Submitted == false))
@@ -52,7 +53,7 @@ namespace RaccoonBlog.Web.Helpers
         {
             return documentSession.Query<Post>()
                 .Where(x => x.PublishAt <= currentDateTimeOffset &&
-                            x.TagsAsSlugs.Any(t => t == SendToRedditTag || t == "social") &&
+                            x.TagsAsSlugs.Any(t => t == SendToRedditTag || t == "social" || t == "social-reddit") &&
                             (x.Integration != null &&
                              x.Integration.Reddit != null ||
                              x.Integration.Reddit.PostSubmissions.Any(
