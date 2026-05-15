@@ -114,7 +114,7 @@ namespace RaccoonBlog.Web.Infrastructure
                 store.Subscriptions.Create(new SubscriptionCreationOptions
                 {
                     Name = SubscriptionName,
-                    Query = "from EmailCommands where SendTo != null",
+                    Query = "from EmailCommands where SendTo != null  and not exists(@metadata.@refresh)",
                     ChangeVector = "LastDocument"
                 });
                 _log.Info("Created data subscription '{Name}'.", SubscriptionName);
