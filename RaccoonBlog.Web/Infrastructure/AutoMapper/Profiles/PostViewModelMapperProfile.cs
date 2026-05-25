@@ -1,4 +1,5 @@
 using System.Net;
+using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Http;
 using RaccoonBlog.Web.Helpers;
 using RaccoonBlog.Web.Infrastructure.AutoMapper.Profiles.Resolvers;
@@ -19,6 +20,7 @@ namespace RaccoonBlog.Web.Infrastructure.AutoMapper.Profiles
 				.ForMember(x => x.IsCommentAllowed, o => o.MapFrom(m => m.AllowComments))
 				.ForMember(x => x.Title, o => o.MapFrom(m => WebUtility.HtmlDecode(m.Title)))
 				.ForMember(x => x.Author, o => o.Ignore())
+				.ForMember(x => x.Body, o => o.MapFrom(m => new HtmlString(ImageUrlRewriter.RewriteImageUrls(m.Body))))
 				;
 
 			CreateMap<PostComments.Comment, PostViewModel.Comment>()
