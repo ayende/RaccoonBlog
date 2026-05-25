@@ -1,5 +1,6 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Html;
+using RaccoonBlog.Web.Infrastructure.AutoMapper.Profiles.Resolvers;
 using RaccoonBlog.Web.Infrastructure.Common;
 using RaccoonBlog.Web.Models;
 using RaccoonBlog.Web.ViewModels;
@@ -20,7 +21,7 @@ namespace RaccoonBlog.Web.Infrastructure.AutoMapper.Profiles
 				.ForMember(x => x.Author, o => o.Ignore())
 				.ForMember(x => x.PublishedAt, o => o.MapFrom(m => m.PublishAt))
 				.ForMember(x=>x.Title, o => o.MapFrom(m => System.Net.WebUtility.HtmlDecode(m.Title)))
-				.ForMember(x => x.Body, o => o.MapFrom(m => m.Body))
+				.ForMember(x => x.Body, o => o.MapFrom(m => new HtmlString(ImageUrlRewriter.RewriteImageUrls(m.Body))))
 				.ForMember(x => x.IsSerie, o => o.MapFrom(m => m.Title.Contains(":")))
 				;
 
