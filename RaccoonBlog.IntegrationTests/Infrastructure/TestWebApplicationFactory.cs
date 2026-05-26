@@ -1,8 +1,11 @@
+using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
+using RaccoonBlog.Web.Infrastructure.DataProtection;
 using Raven.Client.Documents;
+using Raven.Client.Documents.Indexes;
 using Raven.Client.Documents.Session;
 using Raven.Embedded;
 using System;
@@ -46,6 +49,8 @@ namespace RaccoonBlog.IntegrationTests.Infrastructure
                 // Create a new test DocumentStore with a unique database name
                 _testDocumentStore = EmbeddedServerHelper.Instance.GetDocumentStore($"TestDb_{Guid.NewGuid()}");
                 
+                IndexCreation.CreateIndexes(typeof(Program).Assembly, _testDocumentStore);
+                
                 // Configure test store to wait for non-stale results
                 _testDocumentStore.OnBeforeQuery += (sender, args) =>
                 {
@@ -54,6 +59,11 @@ namespace RaccoonBlog.IntegrationTests.Infrastructure
 
                 // Register the test DocumentStore
                 services.AddSingleton(_testDocumentStore);
+                
+                services.Configure<KeyManagementOptions>(options =>
+                {
+                    options.XmlRepository = new RavenDbXmlRepository(_testDocumentStore);
+                });
 
                 // Register scoped IDocumentSession
                 services.AddScoped<IDocumentSession>(provider =>
