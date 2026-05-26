@@ -20,12 +20,10 @@ public class ImagesController : Controller
     [OutputCache(Duration = 1800)]
     public IActionResult GetImage(string imagePath)
     {
-        var fileName = Path.GetFileName(imagePath).ToLowerInvariant();
-
-        if (string.IsNullOrEmpty(fileName))
+        if (string.IsNullOrEmpty(imagePath))
             return NotFound();
-        
-        var docId = "images/" + fileName;
+
+        var docId = "images/" + imagePath.ToLowerInvariant();
         var imageDoc = _ravenSession.Load<PostImage>(docId);
 
         if (imageDoc == null) return NotFound();

@@ -389,67 +389,74 @@ update {
 			public string Body { get; set; }
 		}
 
-#if DEBUG
+// #if DEBUG
 		[HttpGet("admin/posts/migrate-images")]
-		[AllowAnonymous] 
+		[AllowAnonymous]
 		public IActionResult MigrateOldImages([FromServices] IWebHostEnvironment env)
 		{
 		    try
 		    {
-		        var archiveRootPath = env.WebRootPath;
-		        
-		        if (!Directory.Exists(archiveRootPath))
-		            return Content($"Folder not found: {archiveRootPath}");
+		        var imagesRootPath = Path.Combine(env.WebRootPath, "images");
+
+		        if (!Directory.Exists(imagesRootPath))
+		            return Content($"Folder not found: {imagesRootPath}");
 
 		        int migratedCount = 0;
-		        
-		        var allFiles = Directory.GetFiles(archiveRootPath, "*.*", SearchOption.AllDirectories)
-		                                .Where(f => 
+
+		        var allFiles = Directory.GetFiles(imagesRootPath, "*.*", SearchOption.AllDirectories)
+		                                .Where(f =>
 		                                {
 		                                    var ext = Path.GetExtension(f).ToLower();
 		                                    return ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".gif";
 		                                }).ToList();
-		        
+
 		        int batchSize = 50;
 		        for (int i = 0; i < allFiles.Count; i += batchSize)
 		        {
 		            var batchFiles = allFiles.Skip(i).Take(batchSize).ToList();
-		            var openStreams = new List<FileStream>(); 
-
-		            using (var fileSession = DocumentStore.OpenSession())
+		            var openStreams = new List<FileStream>();
+		            try
 		            {
-		                var batchData = batchFiles.Select(filePath => 
+		                using (var fileSession = DocumentStore.OpenSession())
 		                {
-		                    var fileName = Path.GetFileName(filePath).ToLowerInvariant();
-		                    string contentType = "image/" + Path.GetExtension(filePath).TrimStart('.').ToLower();
-		                    if (contentType == "image/jpg") contentType = "image/jpeg";
-		                    
-		                    return new { Path = filePath, FileName = fileName, DocId = "images/" + fileName, ContentType = contentType };
-		                }).ToList();
-		                
-		                var docIds = batchData.Select(x => x.DocId).Distinct().ToArray();
-		                var existingDocs = fileSession.Load<PostImage>(docIds); 
-		                
-		                var processedIdsInBatch = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-		                foreach (var data in batchData)
-		                {
-		                    if (existingDocs[data.DocId] == null && !processedIdsInBatch.Contains(data.DocId))
+		                    var batchData = batchFiles.Select(filePath =>
 		                    {
-		                        var imageDoc = new PostImage { Id = data.DocId, UploadedAt = DateTimeOffset.Now, FileName = data.FileName };
-		                        fileSession.Store(imageDoc);
-		                        
-		                        var attachmentStream = new FileStream(data.Path, FileMode.Open, FileAccess.Read, FileShare.Read);
-		                        fileSession.Advanced.Attachments.Store(data.DocId, data.FileName, attachmentStream, data.ContentType);
-		                        openStreams.Add(attachmentStream); 
+		                        var relativePath = Path.GetRelativePath(imagesRootPath, filePath)
+		                                              .Replace('\\', '/').ToLowerInvariant();
+		                        var fileName = Path.GetFileName(relativePath);
+		                        string contentType = "image/" + Path.GetExtension(filePath).TrimStart('.').ToLower();
+		                        if (contentType == "image/jpg") contentType = "image/jpeg";
 
-		                        processedIdsInBatch.Add(data.DocId);
-		                        migratedCount++;
+		                        return new { Path = filePath, FileName = fileName, DocId = "images/" + relativePath, ContentType = contentType };
+		                    }).ToList();
+
+		                    var docIds = batchData.Select(x => x.DocId).Distinct().ToArray();
+		                    var existingDocs = fileSession.Load<PostImage>(docIds);
+
+		                    var processedIdsInBatch = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+		                    foreach (var data in batchData)
+		                    {
+		                        if (existingDocs[data.DocId] == null && !processedIdsInBatch.Contains(data.DocId))
+		                        {
+		                            var imageDoc = new PostImage { Id = data.DocId, UploadedAt = DateTimeOffset.Now, FileName = data.FileName };
+		                            fileSession.Store(imageDoc);
+
+		                            var attachmentStream = new FileStream(data.Path, FileMode.Open, FileAccess.Read, FileShare.Read);
+		                            fileSession.Advanced.Attachments.Store(data.DocId, data.FileName, attachmentStream, data.ContentType);
+		                            openStreams.Add(attachmentStream);
+
+		                            processedIdsInBatch.Add(data.DocId);
+		                            migratedCount++;
+		                        }
 		                    }
+
+		                    fileSession.SaveChanges();
 		                }
-		                
-		                fileSession.SaveChanges(); 
-		                foreach (var s in openStreams) s.Dispose(); 
+		            }
+		            finally
+		            {
+		                foreach (var s in openStreams) s.Dispose();
 		            }
 		        }
 
@@ -463,7 +470,7 @@ update {
 		        return Content($"<h1>Error:</h1><pre>{ex.Message}\n{ex.StackTrace}</pre>", "text/html; charset=utf-8");
 		    }
 		}
-#endif
+// #endif
 	}
 
 	public enum CommentCommandOptions
