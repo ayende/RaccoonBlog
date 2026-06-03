@@ -389,7 +389,7 @@ update {
 			public string Body { get; set; }
 		}
 
-// #if DEBUG
+#if DEBUG
 		[HttpGet("admin/posts/migrate-images")]
 		[AllowAnonymous]
 		public IActionResult MigrateOldImages([FromServices] IWebHostEnvironment env)
@@ -470,7 +470,7 @@ update {
 		        return Content($"<h1>Error:</h1><pre>{ex.Message}\n{ex.StackTrace}</pre>", "text/html; charset=utf-8");
 		    }
 		}
-// #endif
+#endif
 	}
 
 	public enum CommentCommandOptions
