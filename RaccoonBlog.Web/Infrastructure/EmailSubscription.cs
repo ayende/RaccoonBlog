@@ -126,8 +126,8 @@ namespace RaccoonBlog.Web.Infrastructure
         {
             var template = cmd.Type switch
             {
-                "NewComment" => NewCommentTemplate,
-                "SpamDigest" => SpamDigestTemplate,
+                "NewComment" => LoadTemplate("NewComment.html"),
+                "SpamDigest" => LoadTemplate("SpamDigest.html"),
                 _ => "{{ subject }}"
             };
 
@@ -152,131 +152,25 @@ namespace RaccoonBlog.Web.Infrastructure
             });
         }
 
-        private const string NewCommentTemplate = """
-            <!DOCTYPE html>
-            <html>
-            <head>
-            <meta charset="utf-8" />
-            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-            </head>
-            <body style="margin:0;padding:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f4f4f4;">
-            <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:20px 0;">
-            <tr><td align="center">
-            <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:4px;overflow:hidden;">
-              <tr>
-                <td style="background:#2c3e50;padding:20px 30px;">
-                  <h1 style="margin:0;color:#ffffff;font-size:22px;">{{ blog_name }}</h1>
-                </td>
-              </tr>
-              <tr>
-                <td style="padding:30px;">
-                  <h2 style="margin:0 0 10px;color:#2c3e50;font-size:18px;">New Comment on:
-                    <a href="https://ayende.com/blog/{{ post_id | string.replace 'posts/' '' }}/{{ post_slug }}?key={{ key }}" style="color:#2980b9;text-decoration:none;">{{ post_title }}</a>
-                  </h2>
-                  <hr style="border:none;border-top:1px solid #ecf0f1;margin:15px 0;" />
-                  <table cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:15px;">
-                    <tr>
-                      <td style="padding:5px 0;color:#7f8c8d;width:90px;vertical-align:top;">Author:</td>
-                      <td style="padding:5px 0;color:#2c3e50;font-weight:bold;">{{ author }}</td>
-                    </tr>
-                    <tr>
-                      <td style="padding:5px 0;color:#7f8c8d;vertical-align:top;">Email:</td>
-                      <td style="padding:5px 0;color:#2c3e50;">{{ comment_email }}</td>
-                    </tr>
-                    {{ if comment_url }}
-                    <tr>
-                      <td style="padding:5px 0;color:#7f8c8d;vertical-align:top;">URL:</td>
-                      <td style="padding:5px 0;"><a href="{{ comment_url }}" style="color:#2980b9;">{{ comment_url }}</a></td>
-                    </tr>
-                    {{ end }}
-                  </table>
-                  <div style="background:#f9f9f9;border-left:4px solid #2c3e50;padding:15px;margin:15px 0;color:#333;line-height:1.6;">
-                    {{ comment_body }}
-                  </div>
-                  <table cellpadding="0" cellspacing="0" style="width:100%;margin:15px 0;font-size:12px;color:#95a5a6;">
-                    <tr>
-                      <td style="padding:3px 0;">IP: {{ ip_address }}</td>
-                    </tr>
-                    <tr>
-                      <td style="padding:3px 0;">User-Agent: {{ user_agent }}</td>
-                    </tr>
-                  </table>
-                  <hr style="border:none;border-top:1px solid #ecf0f1;margin:15px 0;" />
-                  <table cellpadding="0" cellspacing="0">
-                    <tr>
-                      <td style="padding-right:10px;">
-                        <a href="https://ayende.com/blog/{{ post_id | string.replace 'posts/' '' }}/{{ post_slug }}?key={{ key }}#comments" style="display:inline-block;padding:8px 16px;background:#2980b9;color:#ffffff;text-decoration:none;border-radius:3px;font-size:13px;">View Comment</a>
-                      </td>
-                      <td style="padding-right:10px;">
-                        <a href="https://ayende.com/blog/admin/comments" style="display:inline-block;padding:8px 16px;background:#2c3e50;color:#ffffff;text-decoration:none;border-radius:3px;font-size:13px;">Admin</a>
-                      </td>
-                      {{ if ip_address }}
-                      <td>
-                        <a href="https://ayende.com/blog/admin/settings" style="display:inline-block;padding:8px 16px;background:#c0392b;color:#ffffff;text-decoration:none;border-radius:3px;font-size:13px;">Block IP</a>
-                      </td>
-                      {{ end }}
-                    </tr>
-                  </table>
-                </td>
-              </tr>
-              <tr>
-                <td style="background:#ecf0f1;padding:15px 30px;text-align:center;font-size:12px;color:#95a5a6;">
-                  {{ blog_name }} &mdash; Comment Notification
-                </td>
-              </tr>
-            </table>
-            </td></tr>
-            </table>
-            </body>
-            </html>
-            """;
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, string> _templateCache = new();
 
-        private const string SpamDigestTemplate = """
-            <!DOCTYPE html>
-            <html>
-            <head>
-            <meta charset="utf-8" />
-            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-            </head>
-            <body style="margin:0;padding:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f4f4f4;">
-            <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:20px 0;">
-            <tr><td align="center">
-            <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:4px;overflow:hidden;">
-              <tr>
-                <td style="background:#2c3e50;padding:20px 30px;">
-                  <h1 style="margin:0;color:#ffffff;font-size:22px;">{{ blog_name }}</h1>
-                </td>
-              </tr>
-              <tr>
-                <td style="padding:30px;">
-                  <h2 style="margin:0 0 5px;color:#2c3e50;font-size:18px;">Spam Digest</h2>
-                  <p style="margin:0 0 20px;color:#7f8c8d;font-size:14px;">{{ digest_date }} &mdash; {{ comment_count }} comment{{ if comment_count != 1 }}s{{ end }} flagged as spam</p>
-                  <hr style="border:none;border-top:1px solid #ecf0f1;margin:15px 0;" />
-                  {{ if spam_comments }}
-                  {{ for entry in spam_comments }}
-                  <div style="background:#f9f9f9;border-left:4px solid #e74c3c;padding:12px 15px;margin:10px 0;">
-                    <p style="margin:0 0 5px;font-weight:bold;color:#2c3e50;">{{ entry.author }}
-                      {{ if entry.post_title }}<span style="font-weight:normal;color:#7f8c8d;font-size:12px;"> on {{ entry.post_title }}</span>{{ end }}
-                    </p>
-                    <p style="margin:0;color:#555;font-size:13px;line-height:1.5;">{{ entry.body | string.truncate 200 }}</p>
-                  </div>
-                  {{ end }}
-                  {{ end }}
-                  <hr style="border:none;border-top:1px solid #ecf0f1;margin:20px 0 15px;" />
-                  <a href="https://ayende.com/blog/admin/comments" style="display:inline-block;padding:10px 20px;background:#2c3e50;color:#ffffff;text-decoration:none;border-radius:3px;font-size:13px;">Manage Spam</a>
-                </td>
-              </tr>
-              <tr>
-                <td style="background:#ecf0f1;padding:15px 30px;text-align:center;font-size:12px;color:#95a5a6;">
-                  {{ blog_name }} &mdash; Spam Digest
-                </td>
-              </tr>
-            </table>
-            </td></tr>
-            </table>
-            </body>
-            </html>
-            """;
+        private static string LoadTemplate(string fileName)
+        {
+            return _templateCache.GetOrAdd(fileName, static name =>
+            {
+                var asm = typeof(EmailSubscription).Assembly;
+                var resourceName = Array.Find(
+                    asm.GetManifestResourceNames(),
+                    n => n.EndsWith("EmailTemplates." + name, StringComparison.OrdinalIgnoreCase));
+
+                if (resourceName == null)
+                    throw new InvalidOperationException($"Embedded email template '{name}' was not found.");
+
+                using var stream = asm.GetManifestResourceStream(resourceName);
+                using var reader = new System.IO.StreamReader(stream);
+                return reader.ReadToEnd();
+            });
+        }
 
         private static void EnsureSubscriptionExists(IDocumentStore store)
         {

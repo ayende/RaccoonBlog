@@ -243,7 +243,6 @@ namespace RaccoonBlog.Web.Areas.Admin.Controllers
 					comments.Spam.RemoveAll(spams.Contains);
 					foreach (var comment in spams)
 					{
-						comment.IsSpam = true;
 						comment.SpamCheckStatus = SpamCheckStatus.Spam;
 						comments.Spam.Add(comment);
 					}
@@ -258,7 +257,6 @@ namespace RaccoonBlog.Web.Areas.Admin.Controllers
 
 					foreach (var comment in ham)
 					{
-						comment.IsSpam = false;
 						comment.SpamCheckStatus = SpamCheckStatus.Valid;
 						ResetNumberOfSpamComments(comment);
 					}

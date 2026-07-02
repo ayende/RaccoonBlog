@@ -55,7 +55,6 @@ namespace RaccoonBlog.Web.Models
 			public string Url { get; set; }
 
 			public bool Important { get; set; }
-			public bool IsSpam { get; set; }
 			public SpamCheckStatus SpamCheckStatus { get; set; }
 
 			public DateTimeOffset CreatedAt { get; set; }

@@ -35,7 +35,7 @@ namespace RaccoonBlog.Web.Infrastructure.GenAiTasks
 
                         2. A list of 3-8 SEO keywords/keyphrases relevant to the post content. These should be terms people would search for to find this content. Include both short-tail and long-tail keywords where appropriate.
 
-                        The post content is provided below. Analyze the title, body text, and existing tags.
+                        You are provided with the title, body text, and existing tags for the post. 
                         """,
                     SampleObject = """
                         {

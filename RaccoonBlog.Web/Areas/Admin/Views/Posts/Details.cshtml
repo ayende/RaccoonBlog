@@ -88,7 +88,7 @@
 		}
 		<form asp-action="CommentsAdmin" asp-controller="Posts" asp-area="Admin" asp-route-id="@Model.Post.Id" method="post">
 			@foreach (var comment in Model.Comments) {
-				<article class="comment @(comment.IsImportant ? " important" : null)@(comment.IsSpam ? " spam" : null)">
+				<article class="comment @(comment.IsImportant ? " important" : null)@(comment.SpamCheckStatus == RaccoonBlog.Web.Models.SpamCheckStatus.Spam ? " spam" : null)">
 					<a name="comment@(comment.Id)"></a>
 					<input type="checkbox" name="commentIds" value="@comment.Id">
 					@if (comment.SpamCheckStatus == RaccoonBlog.Web.Models.SpamCheckStatus.Pending)

@@ -179,7 +179,7 @@ namespace RaccoonBlog.ImportFromSubtext
 									Important = comment.IsBlogAuthor ?? false,
 									UserAgent = comment.UserAgent,
 									UserHostAddress = comment.IpAddress,
-									IsSpam = false,
+									SpamCheckStatus = SpamCheckStatus.Valid,
 									CommenterId = null,
 								}
 						).ToList();
@@ -198,7 +198,7 @@ namespace RaccoonBlog.ImportFromSubtext
 									Important = comment.IsBlogAuthor ?? false,
 									UserAgent = comment.UserAgent,
 									UserHostAddress = comment.IpAddress,
-									IsSpam = true,
+									SpamCheckStatus = SpamCheckStatus.Spam,
 									CommenterId = null,
 								}
 						).ToList();

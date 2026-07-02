@@ -23,7 +23,6 @@ namespace RaccoonBlog.Web.ViewModels
 			public string Url { get; set; }    // Look for HTML injection.
 			public string EmailHash { get; set; }
 			public DateTimeOffset CreatedAt { get; set; }
-			public bool IsSpam { get; set; }
 			public bool IsImportant { get; set; }
 			public Models.SpamCheckStatus SpamCheckStatus { get; set; }
 		}

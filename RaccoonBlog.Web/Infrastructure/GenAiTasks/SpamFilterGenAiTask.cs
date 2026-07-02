@@ -48,11 +48,16 @@ namespace RaccoonBlog.Web.Infrastructure.GenAiTasks
                             Name = "ReadPostComments",
                             Description = """
                                           Use this to read the _other_ comments on the same post to get more context. Returns all valid comments
-                                          on this post, so you can check is replying to another comment, instead of trying to evaluate it in isolation.
+                                          on this post, so you can check if this is replying to another comment, instead of trying to evaluate it in isolation.
                                           """,
                             ParametersSampleObject = "{}",
                             Query = """
-                                    from PostComments where id() = $PostCommentsId
+                                    from PostComments as pc
+                                    where id(pc) = $PostCommentsId
+                                    select 
+                                    {
+                                        Comments: pc.Comments.filter(c=>c.SpamCheckStatus == 'Valid')
+                                    }
                                     """
                         }
                     ],
@@ -60,6 +65,7 @@ namespace RaccoonBlog.Web.Infrastructure.GenAiTasks
                         You are a spam filter for a technical blog. Analyze this blog comment.
                         A spam comment typically includes irrelevant or promotional content,
                         excessive links, misleading information, or advertising intent.
+
                         A legitimate comment engages with the post, asks relevant questions,
                         or provides relevant feedback. You can see the title and tags of the post this
                         comment is in reply to.
@@ -79,7 +85,6 @@ namespace RaccoonBlog.Web.Infrastructure.GenAiTasks
 
                         if ($output.IsSpam) {
                             var c = this.Comments[idx];
-                            c.IsSpam = true;
                             c.SpamCheckStatus = 'Spam';
                             this.Comments.splice(idx, 1);
                             this.Spam.push(c);

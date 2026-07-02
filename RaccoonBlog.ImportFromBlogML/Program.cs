@@ -107,7 +107,7 @@ namespace RaccoonBlog.ImportFromBlogML
                                                                       u => u.Value.FullName == comment.UserName),
                                                               //UserAgent = comment.,
                                                               //UserHostAddress = comment.IpAddress,
-                                                              IsSpam = false,
+                                                              SpamCheckStatus = SpamCheckStatus.Valid,
                                                               CommenterId = null,
                                                           }
                     ).ToList();
@@ -127,7 +127,7 @@ namespace RaccoonBlog.ImportFromBlogML
                                                               usersList.Any(u => u.Value.FullName == comment.UserName),
                                                           //UserAgent = comment.UserAgent,
                                                           //UserHostAddress = comment.IpAddress,
-                                                          IsSpam = true,
+                                                          SpamCheckStatus = SpamCheckStatus.Spam,
                                                           CommenterId = null,
                                                       }
                     ).Where(c => c.Body != null).ToList();

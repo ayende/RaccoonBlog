@@ -39,7 +39,7 @@ namespace RaccoonBlog.Web.Infrastructure.GenAiTasks
                            relevant hashtags if natural. Do not include a URL.
 
                         2. Reddit: A compelling submission title for a programming subreddit audience.
-                           Should be informative and spark discussion. No clickbait. Max 300 characters.
+                           Should be informative and spark discussion. No clickbait. Max 200 characters.
                         """,
                     SampleObject = """
                         {

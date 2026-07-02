@@ -191,7 +191,6 @@ namespace RaccoonBlog.Web.Controllers
                 Important = User.Identity.IsAuthenticated,
                 UserHostAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
                 UserAgent = Request.Headers["User-Agent"].FirstOrDefault(),
-                IsSpam = false,
                 SpamCheckStatus = SpamCheckStatus.Pending
             };
 
