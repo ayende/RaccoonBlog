@@ -43,13 +43,12 @@ namespace RaccoonBlog.Web.Infrastructure
             {
                 try
                 {
-                    await worker.Run(batch =>
+                    await worker.Run(async batch =>
                     {
                         foreach (var item in batch.Items)
                         {
-                            ProcessPost(store, item.Result);
+                            await ProcessPost(store, item.Result);
                         }
-                        return Task.CompletedTask;
                     });
                 }
                 catch (Exception e)
@@ -59,7 +58,7 @@ namespace RaccoonBlog.Web.Infrastructure
             });
         }
 
-        private static void ProcessPost(IDocumentStore store, Post post)
+        private static async Task ProcessPost(IDocumentStore store, Post post)
         {
             if (post.PublishAt > DateTimeOffset.UtcNow)
             {
@@ -90,7 +89,7 @@ namespace RaccoonBlog.Web.Infrastructure
                 TryPostToReddit(store, post);
 
             if (hasTwitter)
-                TryPostToTwitter(store, post);
+                await TryPostToTwitter(store, post);
         }
 
         private static void TryPostToReddit(IDocumentStore store, Post post)
@@ -104,10 +103,16 @@ namespace RaccoonBlog.Web.Infrastructure
             _log.Warn("Reddit posting disabled (pending RedditSharp 2.0 migration) for post {PostId}", post.Id);
         }
 
-        private static void TryPostToTwitter(IDocumentStore store, Post post)
+        private static async Task TryPostToTwitter(IDocumentStore store, Post post)
         {
             try
             {
+                if (string.IsNullOrEmpty(post.Social?.TwitterText))
+                {
+                    _log.Info("No Twitter text generated, skipping post {PostId}", post.Id);
+                    return;
+                }
+
                 using var session = store.OpenSession();
                 var blogConfig = session.Load<BlogConfig>("Blog/Config");
 
@@ -129,7 +134,7 @@ namespace RaccoonBlog.Web.Infrastructure
                     System.Text.Encoding.UTF8,
                     "application/json");
 
-                var response = client.PostAsync("https://api.x.com/2/tweets", content).Result;
+                var response = await client.PostAsync("https://api.x.com/2/tweets", content);
 
                 if (response.IsSuccessStatusCode)
                     _log.Info("Tweet posted for {PostId}", post.Id);
@@ -146,18 +151,20 @@ namespace RaccoonBlog.Web.Infrastructure
         {
             try
             {
-                store.Subscriptions.GetSubscriptionState(SubscriptionName);
+                if (store.Subscriptions.GetSubscriptionState(SubscriptionName) != null)
+                    return;
             }
             catch (SubscriptionDoesNotExistException)
             {
-                store.Subscriptions.Create(new SubscriptionCreationOptions
-                {
-                    Name = SubscriptionName,
-                    Query = "from Posts where Social.GeneratedAt != null and (Social.DisableAutoPublish == false or Social.DisableAutoPublish == null) and not exists(@metadata.@refresh)",
-                    ChangeVector = "LastDocument"
-                });
-                _log.Info("Created data subscription '{Name}'.", SubscriptionName);
             }
+
+            store.Subscriptions.Create(new SubscriptionCreationOptions
+            {
+                Name = SubscriptionName,
+                Query = "from Posts where Social.GeneratedAt != null and (Social.DisableAutoPublish == false or Social.DisableAutoPublish == null) and not exists(@metadata.@refresh)",
+                ChangeVector = "LastDocument"
+            });
+            _log.Info("Created data subscription '{Name}'.", SubscriptionName);
         }
     }
 }

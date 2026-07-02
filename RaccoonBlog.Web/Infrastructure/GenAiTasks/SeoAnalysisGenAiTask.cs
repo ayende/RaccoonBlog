@@ -11,11 +11,9 @@ namespace RaccoonBlog.Web.Infrastructure.GenAiTasks
 
         public static void Register(IDocumentStore store)
         {
-            try
+            var config = new GenAiConfiguration
             {
-                var config = new GenAiConfiguration
-                {
-                    Name = "SEO Analysis",
+                Name = "SEO Analysis",
                     Identifier = "seo-analysis",
                     ConnectionStringName = "ai-chat",
                     Disabled = false,
@@ -52,22 +50,9 @@ namespace RaccoonBlog.Web.Infrastructure.GenAiTasks
                             LastAnalyzedAt: new Date().toISOString()
                         };
                         """
-                };
-                try
-                {
-                    store.Maintenance.Send(new AddGenAiOperation(config));
-                    _log.Info("GenAI SEO analysis task created.");
-                }
-                catch
-                {
-                    store.Maintenance.Send(new UpdateGenAiOperation(config.TaskId, config));
-                    _log.Info("GenAI SEO analysis task updated.");
-                }
-            }
-            catch (Exception e)
-            {
-                _log.Error(e, "Failed to create/update GenAI SEO analysis task.");
-            }
+            };
+
+            GenAiTaskHelper.RegisterOrUpdate(store, config, _log, "SEO analysis");
         }
     }
 }

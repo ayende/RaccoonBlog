@@ -12,11 +12,9 @@ namespace RaccoonBlog.Web.Infrastructure.GenAiTasks
 
         public static void Register(IDocumentStore store)
         {
-            try
+            var config = new GenAiConfiguration
             {
-                var config = new GenAiConfiguration
-                {
-                    Name = "social-media",
+                Name = "social-media",
                     Identifier = "social-media",
                     ConnectionStringName = "ai-chat",
                     Disabled = false,
@@ -57,22 +55,9 @@ namespace RaccoonBlog.Web.Infrastructure.GenAiTasks
 
                         getMetadata(this)['@refresh'] = this.PublishAt;
                         """
-                };
-                try
-                {
-                    store.Maintenance.Send(new AddGenAiOperation(config, StartingPointChangeVector.LastDocument));
-                    _log.Info("GenAI social media task created.");
-                }
-                catch
-                {
-                    store.Maintenance.Send(new UpdateGenAiOperation(config.TaskId, config));
-                    _log.Info("GenAI social media task updated.");
-                }
-            }
-            catch (Exception e)
-            {
-                _log.Error(e, "Failed to create/update GenAI social media task.");
-            }
+            };
+
+            GenAiTaskHelper.RegisterOrUpdate(store, config, _log, "social media", StartingPointChangeVector.LastDocument);
         }
     }
 }

@@ -101,27 +101,25 @@
 		</div>
 
 	</div>
-	@if (!string.IsNullOrEmpty(Model.SeoMetaDescription) || !string.IsNullOrEmpty(Model.SeoKeywords))
-	{
-		<hr />
-		<div class="row">
-			<div class="col-lg-12">
-				<h4>SEO (auto-generated)</h4>
-				<div class="form-group">
-					<label>Meta Description</label>
-					<p class="form-control-static" style="background-color: #f5f5f5; padding: 10px;">@(Model.SeoMetaDescription ?? "Not yet analyzed")</p>
-				</div>
-				<div class="form-group">
-					<label>Keywords</label>
-					<p class="form-control-static" style="background-color: #f5f5f5; padding: 10px;">@(Model.SeoKeywords ?? "Not yet analyzed")</p>
-				</div>
-				@if (Model.SeoLastAnalyzedAt.HasValue)
-				{
-					<p><small>Last analyzed: @Model.SeoLastAnalyzedAt.Value.ToString("r")</small></p>
-				}
+	<hr />
+	<div class="row">
+		<div class="col-lg-12">
+			<h4>SEO</h4>
+			<div class="form-group">
+				<label>Meta Description</label>
+				@Html.TextAreaFor(x => x.SeoMetaDescription, new { rows = "2", @class = "form-control", placeholder = "AI-generated; edit to override." })
 			</div>
+			<div class="form-group">
+				<label>Keywords</label>
+				@Html.TextBoxFor(x => x.SeoKeywords, new { @class = "form-control", placeholder = "Comma-separated keywords." })
+			</div>
+			@Html.HiddenFor(x => x.SeoLastAnalyzedAt)
+			@if (Model.SeoLastAnalyzedAt.HasValue)
+			{
+				<p><small>Last analyzed by AI: @Model.SeoLastAnalyzedAt.Value.ToString("r")</small></p>
+			}
 		</div>
-	}
+	</div>
 	<input type="submit" value="Save" class="btn btn-primary pull-right" style="margin-top:20px" />
 	<div class="clearfix"></div>
 }

@@ -12,11 +12,9 @@ namespace RaccoonBlog.Web.Infrastructure.GenAiTasks
 
         public static void Register(IDocumentStore store)
         {
-            try
+            var config = new GenAiConfiguration
             {
-                var config = new GenAiConfiguration
-                {
-                    Name = "spam-filter",
+                Name = "spam-filter",
                     Identifier = "spam-filter",
                     ConnectionStringName = "ai-chat",
                     Disabled = false,
@@ -103,10 +101,14 @@ namespace RaccoonBlog.Web.Infrastructure.GenAiTasks
                                 Author: $input.Author,
                                 Body: $input.Body,
                                 PostId: this.Post.Id,
+                                PostTitle: post ? post.Title : '',
                                 Timestamp: new Date().toISOString()
                             };
 
                             var dig = load(digestId) || {
+                                Type: 'SpamDigest',
+                                Subject: 'Spam digest for ' + today,
+                                DigestDate: today,
                                 SpamComments: [],
                                 Count: 0,
                                 '@metadata': {
@@ -131,6 +133,7 @@ namespace RaccoonBlog.Web.Infrastructure.GenAiTasks
 
                             var post = load(this.Post.Id);
                             var postTitle = post ? post.Title : '';
+                            var postSlug = postTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 
                             var emailCmd = {
                                 Type: 'NewComment',
@@ -148,29 +151,16 @@ namespace RaccoonBlog.Web.Infrastructure.GenAiTasks
                                 CommenterId: $input.CommenterId || '',
                                 PostId: this.Post.Id || '',
                                 PostTitle: postTitle,
-                                PostSlug: post ? post.Slug : '',
-                                Key: post.ShowPostEvenIfPrivate,
+                                PostSlug: postSlug,
+                                Key: post ? post.ShowPostEvenIfPrivate : '',
                                 '@metadata': { '@collection': 'EmailCommands' }
                             };
                             put('EmailCommands/new-comment-' + $input.Id, emailCmd);
                         }
                         """
-                };
-                try
-                {
-                    store.Maintenance.Send(new AddGenAiOperation(config));
-                    _log.Info("GenAI spam filter task created.");
-                }
-                catch
-                {
-                    store.Maintenance.Send(new UpdateGenAiOperation(config.TaskId, config));
-                    _log.Info("GenAI spam filter task updated.");
-                }
-            }
-            catch (Exception e)
-            {
-                _log.Error(e, "Failed to create/update GenAI spam filter task.");
-            }
+            };
+
+            GenAiTaskHelper.RegisterOrUpdate(store, config, _log, "spam filter");
         }
     }
 }

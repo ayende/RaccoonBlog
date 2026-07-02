@@ -146,7 +146,7 @@ if (int.TryParse(builder.Configuration["Raven:RequestsTimeoutInSec"], out int ti
 documentStore.Initialize();
 
 // Configure GenAI tasks and subscriptions
-ConfigureRefreshAndGenAiTasks(documentStore);
+ConfigureRefreshAndGenAiTasks(documentStore, builder.Configuration);
 
 builder.Services.AddSingleton<IDocumentStore>(documentStore);
 
@@ -332,7 +332,7 @@ app.UseMetaWeblog("/Services/MetaWeblogAPI.ashx");
     
 app.Run();
 
-static void ConfigureRefreshAndGenAiTasks(IDocumentStore store)
+static void ConfigureRefreshAndGenAiTasks(IDocumentStore store, Microsoft.Extensions.Configuration.IConfiguration configuration)
 {
     var log = LogManager.GetCurrentClassLogger();
 
@@ -359,7 +359,7 @@ static void ConfigureRefreshAndGenAiTasks(IDocumentStore store)
     SocialMediaGenAiTask.Register(store);
 
     // Start subscription workers
-    RaccoonBlog.Web.Infrastructure.EmailSubscription.Start(store);
+    RaccoonBlog.Web.Infrastructure.EmailSubscription.Start(store, configuration);
     RaccoonBlog.Web.Infrastructure.SocialPostingSubscription.Start(store);
 }
 

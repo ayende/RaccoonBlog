@@ -45,9 +45,6 @@ namespace RaccoonBlog.Web.Models
         [Display(Name = "Copyright string")]
         public string Copyright { get; set; }
 
-        [Display(Name = "Akismet Key")]
-        public string AkismetKey { get; set; }
-
         [Display(Name = "Google-Analytics Key")]
         public string GoogleAnalyticsKey { get; set; }
 

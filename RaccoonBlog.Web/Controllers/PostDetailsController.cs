@@ -170,9 +170,11 @@ namespace RaccoonBlog.Web.Controllers
                 return PostingCommentSucceeded(post, input);
             }
 
-            // Create or update commenter
+            // Create or update commenter. IsTrustedCommenter is intentionally left untouched:
+            // returning commenters keep their existing trust, new ones default to null (set later
+            // by the spam-filter task once a comment is confirmed valid). CommentInput has no
+            // IsTrustedCommenter member, so MapPropertiesToInstance will not overwrite it.
             var newCommenter = commenter ?? new Commenter { Key = Guid.Parse(input.CommenterKey) };
-            newCommenter.IsTrustedCommenter = commenter?.IsTrustedCommenter;
             input.MapPropertiesToInstance(newCommenter);
             RavenSession.Store(newCommenter);
 

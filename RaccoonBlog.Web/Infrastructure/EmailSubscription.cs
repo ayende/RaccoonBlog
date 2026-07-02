@@ -1,6 +1,8 @@
 using System;
+using System.Net;
 using System.Net.Mail;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 using NLog;
 using RaccoonBlog.Web.Models;
 using Raven.Client.Documents;
@@ -13,13 +15,15 @@ namespace RaccoonBlog.Web.Infrastructure
     {
         private static readonly Logger _log = LogManager.GetCurrentClassLogger();
         private static bool _started;
+        private static IConfiguration _configuration;
 
         private const string SubscriptionName = "email-worker";
 
-        public static void Start(IDocumentStore store)
+        public static void Start(IDocumentStore store, IConfiguration configuration)
         {
             if (_started) return;
             _started = true;
+            _configuration = configuration;
 
             EnsureSubscriptionExists(store);
             var worker = store.Subscriptions.GetSubscriptionWorker<SendEmailCommand>(SubscriptionName);
@@ -71,14 +75,34 @@ namespace RaccoonBlog.Web.Infrastructure
 
                 var blogName = cmd.BlogName ?? blogConfig?.Title ?? "";
 
-                using (var client = new SmtpClient())
+                var smtpHost = _configuration?["SmtpSettings:Host"];
+                var smtpPort = _configuration?.GetValue<int>("SmtpSettings:Port", 587) ?? 587;
+                var smtpUser = _configuration?["SmtpSettings:UserName"];
+                var smtpPass = _configuration?["SmtpSettings:Password"];
+                var enableSsl = _configuration?.GetValue<bool>("SmtpSettings:EnableSsl", true) ?? true;
+                var fromEmail = _configuration?["SmtpSettings:From"];
+
+                if (string.IsNullOrEmpty(smtpHost))
                 {
+                    _log.Warn("SmtpSettings:Host is not configured; cannot send email: {Subject}", cmd.Subject);
+                    return;
+                }
+
+                using (var client = new SmtpClient(smtpHost, smtpPort))
+                {
+                    client.EnableSsl = enableSsl;
+                    if (!string.IsNullOrEmpty(smtpUser))
+                        client.Credentials = new NetworkCredential(smtpUser, smtpPass);
+
                     var message = new MailMessage
                     {
                         IsBodyHtml = true,
                         Body = BuildEmailBody(cmd, blogName),
                         Subject = cmd.Subject
                     };
+
+                    if (!string.IsNullOrEmpty(fromEmail))
+                        message.From = new MailAddress(fromEmail);
 
                     if (!string.IsNullOrEmpty(cmd.ReplyTo))
                     {
@@ -258,18 +282,20 @@ namespace RaccoonBlog.Web.Infrastructure
         {
             try
             {
-                store.Subscriptions.GetSubscriptionState(SubscriptionName);
+                if (store.Subscriptions.GetSubscriptionState(SubscriptionName) != null)
+                    return;
             }
             catch (SubscriptionDoesNotExistException)
             {
-                store.Subscriptions.Create(new SubscriptionCreationOptions
-                {
-                    Name = SubscriptionName,
-                    Query = "from EmailCommands where Subject != null and not exists(@metadata.@refresh)",
-                    ChangeVector = "LastDocument"
-                });
-                _log.Info("Created data subscription '{Name}'.", SubscriptionName);
             }
+
+            store.Subscriptions.Create(new SubscriptionCreationOptions
+            {
+                Name = SubscriptionName,
+                Query = "from EmailCommands where Subject != null and not exists(@metadata.@refresh)",
+                ChangeVector = "LastDocument"
+            });
+            _log.Info("Created data subscription '{Name}'.", SubscriptionName);
         }
     }
 }
