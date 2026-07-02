@@ -19,7 +19,7 @@
     }
     <meta name="description" content="@description">
     @if (Model.Post.SeoKeywords != null && Model.Post.SeoKeywords.Count > 0) {
-        <meta name="keywords" content="@string.Join(", ", Model.Post.SeoKeywords)">
+    <meta name="keywords" content="@string.Join(", ", Model.Post.SeoKeywords)">
     }
 
     <meta property="og:site_name" content="@ViewBag.BlogConfig.Title">

@@ -24,7 +24,7 @@ namespace RaccoonBlog.Web.Infrastructure.GenAiTasks
                         Script = """
                             ai.genContext({
                                 Title: this.Title,
-                                Body: this.Body,
+                                Body: this.Body.substring(0, 16 * 1024),
                                 Tags: this.Tags
                             });
                             """
