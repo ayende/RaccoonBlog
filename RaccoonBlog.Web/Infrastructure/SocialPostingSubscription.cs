@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using NLog;
 using RaccoonBlog.Web.Helpers;
+using RaccoonBlog.Web.Infrastructure.Common;
 using RaccoonBlog.Web.Models;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Session;
@@ -86,21 +87,108 @@ namespace RaccoonBlog.Web.Infrastructure
                 return;
 
             if (hasReddit)
-                TryPostToReddit(store, post);
+                await TryPostToReddit(store, post);
 
             if (hasTwitter)
                 await TryPostToTwitter(store, post);
         }
 
-        private static void TryPostToReddit(IDocumentStore store, Post post)
+        private static async Task TryPostToReddit(IDocumentStore store, Post post)
         {
-            if (post.Integration?.Reddit?.Submitted == true)
-                return;
+            var title = post.Social?.RedditTitle;
+            if (string.IsNullOrWhiteSpace(title))
+                title = System.Net.WebUtility.HtmlDecode(post.Title);
 
-            // TODO: Reddit integration is currently disabled in .NET 8 migration
-            // (SubmitToRedditStrategy is wrapped in #if FALSE).
-            // Re-enable when RedditSharp 2.0+ API is integrated.
-            _log.Warn("Reddit posting disabled (pending RedditSharp 2.0 migration) for post {PostId}", post.Id);
+            if (string.IsNullOrWhiteSpace(title))
+            {
+                _log.Info("No Reddit title available, skipping post {PostId}", post.Id);
+                return;
+            }
+
+            using var session = store.OpenSession();
+            var blogConfig = session.Load<BlogConfig>("Blog/Config");
+
+            var subreddits = RedditHelper.ParseSubreddits(blogConfig);
+            if (subreddits.Count == 0)
+            {
+                _log.Info("No subreddits configured, skipping Reddit post {PostId}", post.Id);
+                return;
+            }
+
+            if (string.IsNullOrEmpty(blogConfig?.RedditUser) ||
+                string.IsNullOrEmpty(blogConfig?.RedditPassword) ||
+                string.IsNullOrEmpty(blogConfig?.RedditClientAppId) ||
+                string.IsNullOrEmpty(blogConfig?.RedditClientSecret))
+            {
+                _log.Info("Reddit not fully configured, skipping post {PostId}", post.Id);
+                return;
+            }
+
+            var postUrl = PostHelper.Url(post);
+
+            RedditSharp.Reddit reddit;
+            try
+            {
+                var agent = new RedditSharp.BotWebAgent(
+                    blogConfig.RedditUser,
+                    blogConfig.RedditPassword,
+                    blogConfig.RedditClientAppId,
+                    blogConfig.RedditClientSecret,
+                    "http://localhost");
+                reddit = new RedditSharp.Reddit(agent);
+            }
+            catch (Exception e)
+            {
+                _log.Error(e, "Reddit authentication failed for {PostId}", post.Id);
+                EnqueueSocialFailureEmail(store, post, "Reddit", "", e.ToString());
+                return;
+            }
+
+            foreach (var subredditName in subreddits)
+            {
+                try
+                {
+                    var subreddit = await reddit.GetSubredditAsync(subredditName);
+                    await subreddit.SubmitPostAsync(title, postUrl, resubmit: false);
+                    _log.Info("Submitted post {PostId} to {Subreddit}", post.Id, subredditName);
+                }
+                catch (RedditSharp.DuplicateLinkException)
+                {
+                    _log.Info("Post {PostId} already submitted to {Subreddit}", post.Id, subredditName);
+                }
+                catch (Exception e)
+                {
+                    _log.Error(e, "Failed to submit post {PostId} to {Subreddit}", post.Id, subredditName);
+                    EnqueueSocialFailureEmail(store, post, "Reddit", subredditName, e.ToString());
+                }
+            }
+        }
+
+        private static void EnqueueSocialFailureEmail(IDocumentStore store, Post post, string network, string target, string errorDetail)
+        {
+            try
+            {
+                using var session = store.OpenSession();
+                var cmd = new SendEmailCommand
+                {
+                    Type = "SocialPostingFailure",
+                    Subject = $"Social posting to {network} failed: {post.Title}",
+                    Network = network,
+                    Target = target ?? "",
+                    ErrorMessage = errorDetail,
+                    PostId = post.Id,
+                    PostTitle = post.Title,
+                    PostSlug = SlugConverter.TitleToSlug(post.Title),
+                    CreatedAt = DateTimeOffset.Now
+                };
+                session.Store(cmd, "EmailCommands/social-failure-" + Guid.NewGuid().ToString("N"));
+                session.SaveChanges();
+                _log.Info("Queued {Network} failure email for {PostId}", network, post.Id);
+            }
+            catch (Exception e)
+            {
+                _log.Error(e, "Failed to queue {Network} failure email for {PostId}", network, post.Id);
+            }
         }
 
         private static async Task TryPostToTwitter(IDocumentStore store, Post post)

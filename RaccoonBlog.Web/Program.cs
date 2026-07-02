@@ -125,7 +125,10 @@ var documentStore = new DocumentStore
     Database = ravenDatabase,
     Conventions = new DocumentConventions
     {
-        AggressiveCache = { Mode = AggressiveCacheMode.TrackChanges }
+        AggressiveCache = { Mode = AggressiveCacheMode.TrackChanges },
+        FindCollectionName = type => type == typeof(RaccoonBlog.Web.Models.SendEmailCommand)
+            ? "EmailCommands"
+            : DocumentConventions.DefaultGetCollectionName(type)
     }
 };
 
