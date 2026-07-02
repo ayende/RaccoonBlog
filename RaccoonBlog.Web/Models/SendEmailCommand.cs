@@ -29,6 +29,10 @@ namespace RaccoonBlog.Web.Models
         public string BlogName { get; set; }
         public string Key { get; set; }
 
+        public string Network { get; set; }
+        public string Target { get; set; }
+        public string ErrorMessage { get; set; }
+
         public string DigestDate { get; set; }
         public List<SpamDigestEntry> SpamComments { get; set; }
     }

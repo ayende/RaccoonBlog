@@ -128,6 +128,7 @@ namespace RaccoonBlog.Web.Infrastructure
             {
                 "NewComment" => LoadTemplate("NewComment.html"),
                 "SpamDigest" => LoadTemplate("SpamDigest.html"),
+                "SocialPostingFailure" => LoadTemplate("SocialPostingFailure.html"),
                 _ => "{{ subject }}"
             };
 
@@ -145,6 +146,9 @@ namespace RaccoonBlog.Web.Infrastructure
                 cmd.PostId,
                 cmd.PostSlug,
                 cmd.Key,
+                cmd.Network,
+                cmd.Target,
+                cmd.ErrorMessage,
                 cmd.DigestDate,
                 cmd.SpamComments,
                 blog_name = blogName,
