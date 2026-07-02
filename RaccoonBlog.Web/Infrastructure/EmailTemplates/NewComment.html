@@ -16,34 +16,34 @@
   <tr>
     <td style="padding:30px;">
       <h2 style="margin:0 0 10px;color:#2c3e50;font-size:18px;">New Comment on:
-        <a href="https://ayende.com/blog/{{ post_id | string.replace 'posts/' '' }}/{{ post_slug }}?key={{ key }}" style="color:#2980b9;text-decoration:none;">{{ post_title }}</a>
+        <a href="https://ayende.com/blog/{{ post_id | string.replace 'posts/' '' }}/{{ post_slug }}?key={{ key }}" style="color:#2980b9;text-decoration:none;">{{ post_title | html.escape }}</a>
       </h2>
       <hr style="border:none;border-top:1px solid #ecf0f1;margin:15px 0;" />
       <table cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:15px;">
         <tr>
           <td style="padding:5px 0;color:#7f8c8d;width:90px;vertical-align:top;">Author:</td>
-          <td style="padding:5px 0;color:#2c3e50;font-weight:bold;">{{ author }}</td>
+          <td style="padding:5px 0;color:#2c3e50;font-weight:bold;">{{ author | html.escape }}</td>
         </tr>
         <tr>
           <td style="padding:5px 0;color:#7f8c8d;vertical-align:top;">Email:</td>
-          <td style="padding:5px 0;color:#2c3e50;">{{ comment_email }}</td>
+          <td style="padding:5px 0;color:#2c3e50;">{{ comment_email | html.escape }}</td>
         </tr>
         {{ if comment_url }}
         <tr>
           <td style="padding:5px 0;color:#7f8c8d;vertical-align:top;">URL:</td>
-          <td style="padding:5px 0;"><a href="{{ comment_url }}" style="color:#2980b9;">{{ comment_url }}</a></td>
+          <td style="padding:5px 0;"><a href="{{ comment_url | html.escape }}" style="color:#2980b9;">{{ comment_url | html.escape }}</a></td>
         </tr>
         {{ end }}
       </table>
       <div style="background:#f9f9f9;border-left:4px solid #2c3e50;padding:15px;margin:15px 0;color:#333;line-height:1.6;">
-        {{ comment_body }}
+        {{ comment_body | html.escape }}
       </div>
       <table cellpadding="0" cellspacing="0" style="width:100%;margin:15px 0;font-size:12px;color:#95a5a6;">
         <tr>
-          <td style="padding:3px 0;">IP: {{ ip_address }}</td>
+          <td style="padding:3px 0;">IP: {{ ip_address | html.escape }}</td>
         </tr>
         <tr>
-          <td style="padding:3px 0;">User-Agent: {{ user_agent }}</td>
+          <td style="padding:3px 0;">User-Agent: {{ user_agent | html.escape }}</td>
         </tr>
       </table>
       <hr style="border:none;border-top:1px solid #ecf0f1;margin:15px 0;" />

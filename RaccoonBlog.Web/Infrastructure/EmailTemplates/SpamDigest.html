@@ -21,10 +21,10 @@
       {{ if spam_comments }}
       {{ for entry in spam_comments }}
       <div style="background:#f9f9f9;border-left:4px solid #e74c3c;padding:12px 15px;margin:10px 0;">
-        <p style="margin:0 0 5px;font-weight:bold;color:#2c3e50;">{{ entry.author }}
-          {{ if entry.post_title }}<span style="font-weight:normal;color:#7f8c8d;font-size:12px;"> on {{ entry.post_title }}</span>{{ end }}
+        <p style="margin:0 0 5px;font-weight:bold;color:#2c3e50;">{{ entry.author | html.escape }}
+          {{ if entry.post_title }}<span style="font-weight:normal;color:#7f8c8d;font-size:12px;"> on {{ entry.post_title | html.escape }}</span>{{ end }}
         </p>
-        <p style="margin:0;color:#555;font-size:13px;line-height:1.5;">{{ entry.body | string.truncate 200 }}</p>
+        <p style="margin:0;color:#555;font-size:13px;line-height:1.5;">{{ entry.body | string.truncate 200 | html.escape }}</p>
       </div>
       {{ end }}
       {{ end }}

@@ -33,31 +33,37 @@ namespace RaccoonBlog.Web.Infrastructure
 
             // Run all RavenDB interaction (subscription creation + the worker loop) on a
             // background task so app startup never blocks on — or crashes from — RavenDB being
-            // unreachable. The worker comes up on its own once the server is available.
+            // unreachable. On any failure (including RavenDB being down at startup) it retries
+            // after a delay, so the worker self-heals once the server becomes reachable.
             Task.Run(async () =>
             {
-                try
+                while (true)
                 {
-                    EnsureSubscriptionExists(store);
-                    var worker = store.Subscriptions.GetSubscriptionWorker<Post>(SubscriptionName);
-
-                    worker.AfterAcknowledgment += _ =>
+                    try
                     {
-                        _log.Info("Social posting subscription batch acknowledged.");
-                        return Task.CompletedTask;
-                    };
+                        EnsureSubscriptionExists(store);
+                        var worker = store.Subscriptions.GetSubscriptionWorker<Post>(SubscriptionName);
 
-                    await worker.Run(async batch =>
-                    {
-                        foreach (var item in batch.Items)
+                        worker.AfterAcknowledgment += _ =>
                         {
-                            await ProcessPost(store, item.Result);
-                        }
-                    });
-                }
-                catch (Exception e)
-                {
-                    _log.Fatal(e, "Social posting subscription worker failed");
+                            _log.Info("Social posting subscription batch acknowledged.");
+                            return Task.CompletedTask;
+                        };
+
+                        await worker.Run(async batch =>
+                        {
+                            foreach (var item in batch.Items)
+                            {
+                                await ProcessPost(store, item.Result);
+                            }
+                        });
+                    }
+                    catch (Exception e)
+                    {
+                        _log.Error(e, "Social posting subscription worker error; retrying in 30s");
+                    }
+
+                    await Task.Delay(TimeSpan.FromSeconds(30));
                 }
             });
         }

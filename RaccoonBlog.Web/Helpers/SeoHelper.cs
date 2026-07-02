@@ -13,7 +13,10 @@ namespace RaccoonBlog.Web.Helpers
         private static readonly JsonSerializerSettings JsonSettings = new JsonSerializerSettings
         {
             ContractResolver = new CamelCasePropertyNamesContractResolver(),
-            NullValueHandling = NullValueHandling.Ignore
+            NullValueHandling = NullValueHandling.Ignore,
+            // Escape <, >, & etc. as \uXXXX so a value containing "</script>" can't break out
+            // of the surrounding <script type="application/ld+json"> element.
+            StringEscapeHandling = StringEscapeHandling.EscapeHtml
         };
 
         public static IHtmlContent RenderJsonLd(PostViewModel.PostDetails post, string canonicalUrl)

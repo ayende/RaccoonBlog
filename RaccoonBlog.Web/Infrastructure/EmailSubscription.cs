@@ -27,32 +27,38 @@ namespace RaccoonBlog.Web.Infrastructure
 
             // Run all RavenDB interaction (subscription creation + the worker loop) on a
             // background task so app startup never blocks on — or crashes from — RavenDB being
-            // unreachable. The worker comes up on its own once the server is available.
+            // unreachable. On any failure (including RavenDB being down at startup) it retries
+            // after a delay, so the worker self-heals once the server becomes reachable.
             Task.Run(async () =>
             {
-                try
+                while (true)
                 {
-                    EnsureSubscriptionExists(store);
-                    var worker = store.Subscriptions.GetSubscriptionWorker<SendEmailCommand>(SubscriptionName);
-
-                    worker.AfterAcknowledgment += _ =>
+                    try
                     {
-                        _log.Info("Email subscription batch acknowledged.");
-                        return Task.CompletedTask;
-                    };
+                        EnsureSubscriptionExists(store);
+                        var worker = store.Subscriptions.GetSubscriptionWorker<SendEmailCommand>(SubscriptionName);
 
-                    await worker.Run(batch =>
-                    {
-                        foreach (var item in batch.Items)
+                        worker.AfterAcknowledgment += _ =>
                         {
-                            ProcessCommand(store, item.Result);
-                        }
-                        return Task.CompletedTask;
-                    });
-                }
-                catch (Exception e)
-                {
-                    _log.Fatal(e, "Email subscription worker failed");
+                            _log.Info("Email subscription batch acknowledged.");
+                            return Task.CompletedTask;
+                        };
+
+                        await worker.Run(batch =>
+                        {
+                            foreach (var item in batch.Items)
+                            {
+                                ProcessCommand(store, item.Result);
+                            }
+                            return Task.CompletedTask;
+                        });
+                    }
+                    catch (Exception e)
+                    {
+                        _log.Error(e, "Email subscription worker error; retrying in 30s");
+                    }
+
+                    await Task.Delay(TimeSpan.FromSeconds(30));
                 }
             });
         }
@@ -91,6 +97,12 @@ namespace RaccoonBlog.Web.Infrastructure
                     return;
                 }
 
+                if (string.IsNullOrEmpty(fromEmail))
+                {
+                    _log.Warn("SmtpSettings:From is not configured; cannot send email: {Subject}", cmd.Subject);
+                    return;
+                }
+
                 using (var client = new SmtpClient(smtpHost, smtpPort))
                 {
                     client.EnableSsl = enableSsl;
@@ -104,8 +116,7 @@ namespace RaccoonBlog.Web.Infrastructure
                         Subject = cmd.Subject
                     };
 
-                    if (!string.IsNullOrEmpty(fromEmail))
-                        message.From = new MailAddress(fromEmail);
+                    message.From = new MailAddress(fromEmail);
 
                     if (!string.IsNullOrEmpty(cmd.ReplyTo))
                     {
