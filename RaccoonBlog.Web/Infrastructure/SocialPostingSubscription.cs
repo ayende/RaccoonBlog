@@ -225,13 +225,21 @@ namespace RaccoonBlog.Web.Infrastructure
                 var response = await client.PostAsync("https://api.x.com/2/tweets", content);
 
                 if (response.IsSuccessStatusCode)
+                {
                     _log.Info("Tweet posted for {PostId}", post.Id);
+                }
                 else
+                {
+                    var body = await response.Content.ReadAsStringAsync();
+                    var detail = $"Twitter API returned {(int)response.StatusCode} {response.StatusCode}.\nResponse body:\n{body}";
                     _log.Warn("Twitter API error for {PostId}: {Status}", post.Id, response.StatusCode);
+                    EnqueueSocialFailureEmail(store, post, "Twitter", "", detail);
+                }
             }
             catch (Exception e)
             {
                 _log.Error(e, "Failed to post tweet for {PostId}", post.Id);
+                EnqueueSocialFailureEmail(store, post, "Twitter", "", e.ToString());
             }
         }
 
