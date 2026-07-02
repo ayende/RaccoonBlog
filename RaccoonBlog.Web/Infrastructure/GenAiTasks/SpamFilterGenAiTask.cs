@@ -28,7 +28,8 @@ namespace RaccoonBlog.Web.Infrastructure.GenAiTasks
                                     continue;
 
                                 ai.genContext({
-                                    Post: {Title: post.Title, Tags: post.Tags},
+                                    PostTitle: post.Title, 
+                                    PostTags: post.Tags,
                                     Id: comment.Id,
                                     Author: comment.Author,
                                     Body: comment.Body,
@@ -59,6 +60,31 @@ namespace RaccoonBlog.Web.Infrastructure.GenAiTasks
                                         Comments: pc.Comments.filter(c=>c.SpamCheckStatus == 'Valid')
                                     }
                                     """
+                        },
+                        new AiAgentToolQuery
+                        {
+                            Name = "ReadAuthorPastComments",
+                            Description = """
+                                          Can call this to read the recent comments and their status for the same author, to see if they have a 
+                                          history of spammy comments. Users that have a history of good comments should be weighted more positively, 
+                                          while users that have a history of spammy comments should be weighted more negatively.
+                                          """,
+                            ParametersSampleObject = "{}",
+                            
+                            Query = """
+                                    from "PostComments"  as pc
+                                    where pc.Comments[].Author = $Author
+                                    order by pc.Post.PublishAt desc
+                                    select 
+                                    {
+                                        PastComments: pc.Comments.filter(c=>c.Author == $Author)
+                                    }
+                                    limit 5
+                                    """,
+                            Options = new AiAgentToolQueryOptions
+                            {
+                                AddToInitialContext = true
+                            }
                         }
                     ],
                     Prompt = """
@@ -70,7 +96,8 @@ namespace RaccoonBlog.Web.Infrastructure.GenAiTasks
                         or provides relevant feedback. You can see the title and tags of the post this
                         comment is in reply to.
 
-                        Comments that praise the post or author without adding any value, and has additional links, are spam.
+                        Comments that praise the post or author without adding any value and has links that goes to obvious spam (gambling, porn, SEO, etc), are spam.
+                        If they are using a link shortener, that is also a strong signal of spam. Proper names (e.g., John Doe) are indiciation that it is probably not spam, but if the name is a random string of characters, that is a strong signal of spam.
 
                         Based on the comment content and metadata, determine if this comment is likely spam.
                         The expected language is English, if it is anything else, that is also a strong signal of spam.
@@ -90,6 +117,7 @@ namespace RaccoonBlog.Web.Infrastructure.GenAiTasks
                             var c = this.Comments[idx];
                             c.SpamCheckStatus = 'Spam';
                             this.Comments.splice(idx, 1);
+                            c.Reason = $output.Reason;
                             this.Spam.push(c);
 
                             var post = load(this.Post.Id);
@@ -109,6 +137,7 @@ namespace RaccoonBlog.Web.Infrastructure.GenAiTasks
                                 Author: $input.Author,
                                 Body: $input.Body,
                                 PostId: this.Post.Id,
+                                Reason: $output.Reason,
                                 PostTitle: post ? post.Title : '',
                                 Timestamp: new Date().toISOString()
                             };
