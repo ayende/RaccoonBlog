@@ -172,8 +172,8 @@ builder.Services.AddScoped<RaccoonBlog.Web.Models.BlogConfig>(ctx =>
     }
 });
 
-// Configure Authentication
-var authBuilder = builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+// Configure Authentication (cookie auth for the blog admin)
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
         options.Cookie.Path = "/blog";
@@ -182,29 +182,6 @@ var authBuilder = builder.Services.AddAuthentication(CookieAuthenticationDefault
         options.AccessDeniedPath = "/admin/login";
         options.LogoutPath = "/admin/login/logout";
     });
-
-// Only add OAuth providers if credentials are configured
-var googleClientId = builder.Configuration["Raccoon:OAuth:Google:ClientId"];
-var googleClientSecret = builder.Configuration["Raccoon:OAuth:Google:ClientSecret"];
-if (!string.IsNullOrEmpty(googleClientId) && !string.IsNullOrEmpty(googleClientSecret))
-{
-    authBuilder.AddGoogle(options =>
-    {
-        options.ClientId = googleClientId;
-        options.ClientSecret = googleClientSecret;
-    });
-}
-
-var microsoftClientId = builder.Configuration["Raccoon:OAuth:Microsoft:ClientId"];
-var microsoftClientSecret = builder.Configuration["Raccoon:OAuth:Microsoft:ClientSecret"];
-if (!string.IsNullOrEmpty(microsoftClientId) && !string.IsNullOrEmpty(microsoftClientSecret))
-{
-    authBuilder.AddMicrosoftAccount(options =>
-    {
-        options.ClientId = microsoftClientId;
-        options.ClientSecret = microsoftClientSecret;
-    });
-}
 
 // Configure AutoMapper using modern DI pattern for AutoMapper 15.x
 // This automatically registers IMapper in DI and scans for profiles

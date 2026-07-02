@@ -278,7 +278,6 @@ namespace RaccoonBlog.Web.Controllers
                 var user = RavenSession.GetCurrentUser(User);
                 vm.Input = user.MapTo<CommentInput>();
                 vm.IsTrustedCommenter = true;
-                vm.IsLoggedInCommenter = true;
                 return;
             }
 
@@ -290,13 +289,10 @@ namespace RaccoonBlog.Web.Controllers
                 if (commenter == null)
                 {
                     _log.Debug("Could not find commenter for '" + CommenterUtil.CommenterCookieName + "': " + cookieValue);
-                    vm.IsLoggedInCommenter = false;
                     Response.Cookies.Delete(CommenterUtil.CommenterCookieName);
                     return;
                 }
 
-                vm.IsLoggedInCommenter = string.IsNullOrWhiteSpace(commenter.OpenId) == false;
-                _log.Debug("Commenter OpenId: " + commenter.OpenId);
                 vm.Input = commenter.MapTo<CommentInput>();
                 vm.IsTrustedCommenter = commenter.IsTrustedCommenter == true;
             }

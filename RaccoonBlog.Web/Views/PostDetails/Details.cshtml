@@ -268,24 +268,6 @@
             <h3 style="float: left">
                 <a id="comments-form-location">Join the conversation...</a>
             </h3>
-            @*if (Model.IsLoggedInCommenter == false)
-            {
-                <div class="openAuth-wrapper">
-                    <span class="btn">Sign in with</span>
-                    <form action="@Url.Action("Login", "Social")" method="post">
-                        @Html.Hidden("redirectUrl", Url.RelativeToAbsolute((string)ViewBag.CurrentUrl + "#postComment"))
-                        @if (ConfigurationHelper.GoogleOAuthKeys != null)
-                        {
-                            <button type="submit" name="provider" value="Google" class="btn btn-default btn-google"><i class="icon-google"></i></button>
-                        }
-                        @if (ConfigurationHelper.MicrosoftOAuthKeys != null)
-                        {
-                            <button type="submit" name="provider" value="Microsoft" class="btn btn-default btn-ms"><i class="icon-windows"></i></button>
-                        }
-
-                    </form>
-                </div>
-            }*@
             <div class="clearfix"></div>
             <div class="comment-form-wrapper">
                 @using (Html.BeginForm("Comment", "PostDetails", new { Model.Post.Id, key = Model.Post.ShowPostEvenIfPrivate }))
