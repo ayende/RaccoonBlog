@@ -20,8 +20,17 @@ namespace RaccoonBlog.Web.Helpers
             _verifier = verifier;
         }
 
+        // reCAPTCHA is opt-in: it only applies when both keys are configured.
+        // When unconfigured (e.g. local/dev), there is no widget to solve, so
+        // validation is skipped rather than rejecting every comment.
+        public bool IsConfigured =>
+            !string.IsNullOrEmpty(_config["Recaptcha:SiteKey"]) &&
+            !string.IsNullOrEmpty(_config["Recaptcha:Secret"]);
+
         public async Task<bool> Validate(ModelStateDictionary modelState)
         {
+            if (IsConfigured == false) return true;
+
             var secret = _config["Recaptcha:Secret"];
             var token = _httpContext.HttpContext?.Request.Form["g-recaptcha-response"].ToString();
 
@@ -32,7 +41,14 @@ namespace RaccoonBlog.Web.Helpers
             return false;
         }
 
-        public IHtmlContent ScriptRef() => new HtmlString("<script src='https://www.google.com/recaptcha/api.js'></script>");
-        public IHtmlContent Widget() => new HtmlString($"<div class='g-recaptcha' data-sitekey='{_config["Recaptcha:SiteKey"]}'></div>");
+        public IHtmlContent ScriptRef() =>
+            IsConfigured
+                ? new HtmlString("<script src='https://www.google.com/recaptcha/api.js'></script>")
+                : HtmlString.Empty;
+
+        public IHtmlContent Widget() =>
+            IsConfigured
+                ? new HtmlString($"<div class='g-recaptcha' data-sitekey='{_config["Recaptcha:SiteKey"]}'></div>")
+                : HtmlString.Empty;
     }
 }
