@@ -21,10 +21,6 @@
         <small class="phone"><img src="~/css/img/ico_phone.svg" class="icon-about" />@phone</small>
     </div>
     <p class="d-flex gap-3 justify-content-center flex-wrap icomoon margin-top">
-        @if (ViewBag.BlogConfig.TwitterLogin != null)
-        {
-            <a href="@string.Format("https://twitter.com/{0}", ViewBag.BlogConfig.TwitterLogin)" class="icon-twitter"></a>
-        }
         @if (ViewBag.BlogConfig.GithubLogin != null)
         {
             <a href="@string.Format("https://github.com/{0}", ViewBag.BlogConfig.GithubLogin)" class="icon-github"></a>
@@ -32,14 +28,6 @@
         @if (ViewBag.BlogConfig.OwnerEmail != null)
         {
             <a href="@string.Format("mailto:{0}", ViewBag.BlogConfig.OwnerEmail)" class="icon-mail"></a>
-        }
-        @if (ViewBag.BlogConfig.LinkedInLogin != null)
-        {
-            <a href="@string.Format("https://www.linkedin.com/in/{0}", ViewBag.BlogConfig.LinkedInLogin)" class="icon-linkedin"></a>
-        }
-        @if (ViewBag.BlogConfig.FacebookLogin != null)
-        {
-            <a href="@string.Format("https://www.facebook.com/{0}", ViewBag.BlogConfig.FacebookLogin)" class="icon-facebook"></a>
         }
         @if (ViewBag.BlogConfig.RssLogin != null)
         {

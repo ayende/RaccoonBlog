@@ -8,8 +8,6 @@ namespace RaccoonBlog.Web.Helpers
 		private static IConfiguration _configuration;
 		private static Tuple<string, string> microsoftOAuthKeys;
 		private static Tuple<string, string> googleOAuthKeys;
-		private static Tuple<string, string> twitterOAuthKeys;
-		private static Tuple<string, string> facebookOAuthKeys;
 
 		/// <summary>
 		/// Initialize the configuration helper. Call this from Program.cs after building the app.
@@ -32,23 +30,6 @@ namespace RaccoonBlog.Web.Helpers
 			get
 			{
 				return googleOAuthKeys ?? (googleOAuthKeys = GetKeys("Google", "ClientId", "ClientSecret"));
-			}
-		}
-
-		public static Tuple<string, string> TwitterOAuthKeys
-		{
-			get
-			{
-				//return twitterOAuthKeys ?? (twitterOAuthKeys = GetKeys("Twitter", "ConsumerKey", "ConsumerSecret"));
-				return null;
-			}
-		}
-
-		public static Tuple<string, string> FacebookOAuthKeys
-		{
-			get
-			{
-				return facebookOAuthKeys ?? (facebookOAuthKeys = GetKeys("Facebook", "AppId", "AppSecret"));
 			}
 		}
 

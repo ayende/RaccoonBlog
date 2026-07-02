@@ -58,15 +58,6 @@
 			</div>
 			<hr />
 			<div class="postData">
-			<a style='text-decoration:none;' href='@string.Format("http://twitter.com/intent/tweet?status={0}+{1} via @{2}", post.Title, Url.PostUrl(Context.Request, post.Id, post.Slug), post.Author.TwitterNick)'>
-					<span class="icomoon icon-twitter"></span><span>Tweet</span>
-				</a>
-			<a style='text-decoration:none;' type="icon_link" onclick="window.open('@string.Format("http://www.facebook.com/sharer/sharer.php?u={0}&title={1}", Url.PostUrl(Context.Request, post.Id, post.Slug), post.Title)','sharer','toolbar=0,status=0,width=580,height=325');" href="javascript: void(0)">
-					<span class="icomoon icon-facebook"></span><span>Share</span>
-				</a>
-			<a style='text-decoration:none;' type="icon_link" onclick="popUp=window.open('@string.Format("https://plus.google.com/share?url={0}", Url.PostUrl(Context.Request, post.Id, post.Slug))', 'popupwindow', 'scrollbars=yes,width=600,height=400');popUp.focus();return false;" href="javascript: void(0)">
-					<span class="icomoon icon-linkedin"></span><span>Share</span>
-				</a>
 				<a asp-controller="PostDetails" asp-action="Details" asp-route-id="@post.Id" asp-route-slug="@post.Slug" asp-fragment="comments">
 					<span class="icomoon-position glyphicon icon-comment" aria-hidden="true"></span><span>@post.CommentsCount comments</span>
 				</a>

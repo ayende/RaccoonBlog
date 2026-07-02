@@ -206,28 +206,6 @@ if (!string.IsNullOrEmpty(microsoftClientId) && !string.IsNullOrEmpty(microsoftC
     });
 }
 
-var facebookAppId = builder.Configuration["Raccoon:OAuth:Facebook:AppId"];
-var facebookAppSecret = builder.Configuration["Raccoon:OAuth:Facebook:AppSecret"];
-if (!string.IsNullOrEmpty(facebookAppId) && !string.IsNullOrEmpty(facebookAppSecret))
-{
-    authBuilder.AddFacebook(options =>
-    {
-        options.AppId = facebookAppId;
-        options.AppSecret = facebookAppSecret;
-    });
-}
-
-var twitterConsumerKey = builder.Configuration["Raccoon:OAuth:Twitter:ConsumerKey"];
-var twitterConsumerSecret = builder.Configuration["Raccoon:OAuth:Twitter:ConsumerSecret"];
-if (!string.IsNullOrEmpty(twitterConsumerKey) && !string.IsNullOrEmpty(twitterConsumerSecret))
-{
-    authBuilder.AddTwitter(options =>
-    {
-        options.ConsumerKey = twitterConsumerKey;
-        options.ConsumerSecret = twitterConsumerSecret;
-    });
-}
-
 // Configure AutoMapper using modern DI pattern for AutoMapper 15.x
 // This automatically registers IMapper in DI and scans for profiles
 builder.Services.AddAutoMapper(cfg =>
