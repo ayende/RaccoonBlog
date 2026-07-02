@@ -31,19 +31,22 @@ namespace RaccoonBlog.Web.Infrastructure
             if (_started) return;
             _started = true;
 
-            EnsureSubscriptionExists(store);
-            var worker = store.Subscriptions.GetSubscriptionWorker<Post>(SubscriptionName);
-
-            worker.AfterAcknowledgment += _ =>
-            {
-                _log.Info("Social posting subscription batch acknowledged.");
-                return Task.CompletedTask;
-            };
-
+            // Run all RavenDB interaction (subscription creation + the worker loop) on a
+            // background task so app startup never blocks on — or crashes from — RavenDB being
+            // unreachable. The worker comes up on its own once the server is available.
             Task.Run(async () =>
             {
                 try
                 {
+                    EnsureSubscriptionExists(store);
+                    var worker = store.Subscriptions.GetSubscriptionWorker<Post>(SubscriptionName);
+
+                    worker.AfterAcknowledgment += _ =>
+                    {
+                        _log.Info("Social posting subscription batch acknowledged.");
+                        return Task.CompletedTask;
+                    };
+
                     await worker.Run(async batch =>
                     {
                         foreach (var item in batch.Items)
