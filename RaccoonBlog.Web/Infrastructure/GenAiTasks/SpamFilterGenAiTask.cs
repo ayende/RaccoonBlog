@@ -70,13 +70,16 @@ namespace RaccoonBlog.Web.Infrastructure.GenAiTasks
                         or provides relevant feedback. You can see the title and tags of the post this
                         comment is in reply to.
 
+                        Comments that praise the post or author without adding any value, and has additional links, are spam.
+
                         Based on the comment content and metadata, determine if this comment is likely spam.
                         The expected language is English, if it is anything else, that is also a strong signal of spam.
 
                         If the comment may be spam, but can also be part of a conversation, you have the ReadPostComments
                         tool that you can invoke to get the other comments on the same post to get more context before making a decision.
                         """,
-                    SampleObject = """
+                    SampleObject = 
+                        """
                         { "IsSpam": true, "Reason": "brief explanation why you think it is spam or not" }
                         """,
                     UpdateScript = """
