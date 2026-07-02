@@ -29,8 +29,15 @@ namespace RaccoonBlog.Web.Areas.Admin.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public virtual IActionResult Index(BlogConfig config)
+        public virtual IActionResult Index(BlogConfig config, string redditSubredditsText)
         {
+            // The subreddits are stored as an array; the admin form edits them as one-per-line text.
+            config.RedditSubredditsToSubmitToOnPublish = (redditSubredditsText ?? string.Empty)
+                .Split(new[] { '\r', '\n', ',' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(x => x.Trim())
+                .Where(x => x.Length > 0)
+                .ToList();
+
             if (ModelState.IsValid == false)
             {
                 ViewBag.Message = ModelState.FirstErrorMessage();

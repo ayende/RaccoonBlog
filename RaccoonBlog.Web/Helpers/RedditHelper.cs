@@ -64,12 +64,12 @@ namespace RaccoonBlog.Web.Helpers
 
         public static IList<string> ParseSubreddits(BlogConfig config)
         {
-            if (string.IsNullOrEmpty(config.RedditSubredditsToSubmitToOnPublish))
+            if (config?.RedditSubredditsToSubmitToOnPublish == null)
                 return new List<string>();
 
             return config.RedditSubredditsToSubmitToOnPublish
-                .Split(',')
-                .Select(x => x.Trim())
+                .Select(x => x?.Trim())
+                .Where(x => !string.IsNullOrEmpty(x))
                 .ToList();
         }
 

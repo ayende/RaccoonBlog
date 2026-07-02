@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using RaccoonBlog.Web.Helpers;
 
@@ -82,8 +83,8 @@ namespace RaccoonBlog.Web.Models
         [Display(Name = "Reddit Client Secret")]
         public string RedditClientSecret { get; set; }
 
-        [Display(Name = "Reddit Subreddits To Submit To On Publish - comma-separated e.g. /r/test,/r/example")]
-        public string RedditSubredditsToSubmitToOnPublish { get; set; }
+        [Display(Name = "Reddit Subreddits To Submit To On Publish")]
+        public List<string> RedditSubredditsToSubmitToOnPublish { get; set; }
 
         [Display(Name = "Twitter Bearer Token")]
         public string TwitterBearerToken { get; set; }
