@@ -1,6 +1,5 @@
 using HibernatingRhinos.Loci.Common.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Net.Http.Headers;
 using NLog;
 using RaccoonBlog.Web.Helpers;
@@ -86,7 +85,7 @@ namespace RaccoonBlog.Web.Controllers
                 });
             }
 
-            var lastModified = posts.Count > 0 ? posts[0].PublishAt : (DateTimeOffset)stats.Timestamp;
+            var lastModified = (DateTimeOffset)stats.Timestamp;
 
             if (CheckConditionalHeaders(stats, lastModified, out var responseETagHeader, queryBehavior.ETagPage))
                 return HttpNotModified(responseETagHeader, lastModified);
@@ -135,7 +134,8 @@ namespace RaccoonBlog.Web.Controllers
             if (IsRssAccessTokenCurrent(token, out int numberOfDays, out string user))
             {
                 behavior.Take = TokenAuthorizedFeedPageSize;
-                behavior.Skip = (page - 1) * TokenAuthorizedFeedPageSize;
+                var skip = (page - 1L) * TokenAuthorizedFeedPageSize;
+                behavior.Skip = skip > int.MaxValue ? int.MaxValue : (int)skip;
                 behavior.ETagPage = page;
                 behavior.Title = behavior.Title + " for " + user;
                 behavior.PostsQuery = postsQuery.Where(x => x.PublishAt < DateTimeOffset.Now.AddDays(numberOfDays).AsMinutes());
@@ -196,7 +196,7 @@ namespace RaccoonBlog.Web.Controllers
             });
 
             DateTimeOffset? lastModified = commentsTuples.Count > 0
-                ? commentsTuples[0].Item1.CreatedAt
+                ? commentsTuples.Max(x => (DateTimeOffset?)x.Item1.CreatedAt)
                 : null;
 
 
@@ -236,11 +236,13 @@ namespace RaccoonBlog.Web.Controllers
             responseETagHeader = $"\"{etagValue}\"";
 
             var ifNoneMatchHeader = Request.Headers["If-None-Match"].ToString();
-            if (!string.IsNullOrEmpty(ifNoneMatchHeader) && EntityTagHeaderValue.TryParseList([ifNoneMatchHeader], out var etags))
+            if (!string.IsNullOrEmpty(ifNoneMatchHeader))
             {
-                var current = etagValue;
-                if (etags.Any(e => e.Tag == "*" || e.Tag.Value?.Trim('"') == current))
+                if (EntityTagHeaderValue.TryParseList([ifNoneMatchHeader], out var etags) &&
+                    etags.Any(e => e.Tag == "*" || e.Tag.Value?.Trim('"') == etagValue))
                     return true;
+
+                return false;
             }
 
             if (DateTimeOffset.TryParse(Request.Headers["If-Modified-Since"].ToString(), out var ifModifiedSince) && lastModified <= ifModifiedSince)
