@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using RaccoonBlog.Web.Helpers;
 
@@ -71,8 +70,17 @@ namespace RaccoonBlog.Web.Models
         [Display(Name = "Posts On Page")]
         public int PostsOnPage { get; set; }
 
-        [Display(Name = "Twitter Bearer Token")]
-        public string TwitterBearerToken { get; set; }
+        [Display(Name = "Twitter API Key")]
+        public string TwitterApiKey { get; set; }
+
+        [Display(Name = "Twitter API Secret")]
+        public string TwitterApiSecret { get; set; }
+
+        [Display(Name = "Twitter Access Token")]
+        public string TwitterAccessToken { get; set; }
+
+        [Display(Name = "Twitter Access Token Secret")]
+        public string TwitterAccessTokenSecret { get; set; }
 
         public static BlogConfig New()
         {
