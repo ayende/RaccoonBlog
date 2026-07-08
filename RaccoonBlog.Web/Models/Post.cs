@@ -38,8 +38,6 @@ namespace RaccoonBlog.Web.Models
 
 		public bool AllowComments { get; set; }
 
-        public SocialNetworkIntegration Integration { get; set; }
-
 		public SocialMedia Social { get; set; }
 
 		public SeoMetadata Seo { get; set; }

@@ -21,7 +21,6 @@ namespace RaccoonBlog.Web.Infrastructure
 
         public const string SocialTag = "social";
         public const string SocialDisableTag = "social-disable";
-        public const string SocialRedditTag = "social-reddit";
         public const string SocialTwitterTag = "social-twitter";
 
         private static bool _started;
@@ -85,92 +84,15 @@ namespace RaccoonBlog.Web.Infrastructure
 
             var tags = (post.TagsAsSlugs ?? Enumerable.Empty<string>()).ToList();
 
-            bool hasSocialAll = tags.Contains(SocialTag);
-            bool hasReddit = hasSocialAll || tags.Contains(SocialRedditTag);
-            bool hasTwitter = hasSocialAll || tags.Contains(SocialTwitterTag);
+            bool hasTwitter = tags.Contains(SocialTag) || tags.Contains(SocialTwitterTag);
 
-            if (!hasReddit && !hasTwitter)
+            if (!hasTwitter)
                 return;
 
             if (tags.Contains(SocialDisableTag))
                 return;
 
-            if (hasReddit)
-                await TryPostToReddit(store, post);
-
-            if (hasTwitter)
-                await TryPostToTwitter(store, post);
-        }
-
-        private static async Task TryPostToReddit(IDocumentStore store, Post post)
-        {
-            var title = post.Social?.RedditTitle;
-            if (string.IsNullOrWhiteSpace(title))
-                title = System.Net.WebUtility.HtmlDecode(post.Title);
-
-            if (string.IsNullOrWhiteSpace(title))
-            {
-                _log.Info("No Reddit title available, skipping post {PostId}", post.Id);
-                return;
-            }
-
-            using var session = store.OpenSession();
-            var blogConfig = session.Load<BlogConfig>("Blog/Config");
-
-            var subreddits = RedditHelper.ParseSubreddits(blogConfig);
-            if (subreddits.Count == 0)
-            {
-                _log.Info("No subreddits configured, skipping Reddit post {PostId}", post.Id);
-                return;
-            }
-
-            if (string.IsNullOrEmpty(blogConfig?.RedditUser) ||
-                string.IsNullOrEmpty(blogConfig?.RedditPassword) ||
-                string.IsNullOrEmpty(blogConfig?.RedditClientAppId) ||
-                string.IsNullOrEmpty(blogConfig?.RedditClientSecret))
-            {
-                _log.Info("Reddit not fully configured, skipping post {PostId}", post.Id);
-                return;
-            }
-
-            var postUrl = PostHelper.Url(post);
-
-            RedditSharp.Reddit reddit;
-            try
-            {
-                var agent = new RedditSharp.BotWebAgent(
-                    blogConfig.RedditUser,
-                    blogConfig.RedditPassword,
-                    blogConfig.RedditClientAppId,
-                    blogConfig.RedditClientSecret,
-                    "http://localhost");
-                reddit = new RedditSharp.Reddit(agent);
-            }
-            catch (Exception e)
-            {
-                _log.Error(e, "Reddit authentication failed for {PostId}", post.Id);
-                EnqueueSocialFailureEmail(store, post, "Reddit", "", e.ToString());
-                return;
-            }
-
-            foreach (var subredditName in subreddits)
-            {
-                try
-                {
-                    var subreddit = await reddit.GetSubredditAsync(subredditName);
-                    await subreddit.SubmitPostAsync(title, postUrl, resubmit: false);
-                    _log.Info("Submitted post {PostId} to {Subreddit}", post.Id, subredditName);
-                }
-                catch (RedditSharp.DuplicateLinkException)
-                {
-                    _log.Info("Post {PostId} already submitted to {Subreddit}", post.Id, subredditName);
-                }
-                catch (Exception e)
-                {
-                    _log.Error(e, "Failed to submit post {PostId} to {Subreddit}", post.Id, subredditName);
-                    EnqueueSocialFailureEmail(store, post, "Reddit", subredditName, e.ToString());
-                }
-            }
+            await TryPostToTwitter(store, post);
         }
 
         private static void EnqueueSocialFailureEmail(IDocumentStore store, Post post, string network, string target, string errorDetail)

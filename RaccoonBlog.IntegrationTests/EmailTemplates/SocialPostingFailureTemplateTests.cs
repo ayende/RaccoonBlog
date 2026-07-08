@@ -28,16 +28,16 @@ namespace RaccoonBlog.IntegrationTests.EmailTemplates
             var html = template.Render(new
             {
                 blog_name = "Test Blog",
-                network = "Reddit",
-                target = "/r/programming",
+                network = "Twitter",
+                target = "https://x.com",
                 post_title = "My Post",
                 post_id = "posts/1",
                 post_slug = "my-post",
                 error_message = "System.Exception: boom <fail>"
             });
 
-            Assert.Contains("Reddit", html);
-            Assert.Contains("/r/programming", html);
+            Assert.Contains("Twitter", html);
+            Assert.Contains("https://x.com", html);
             Assert.Contains("My Post", html);
             Assert.Contains("boom", html);
             // error detail must be HTML-encoded (no raw angle brackets from the trace)

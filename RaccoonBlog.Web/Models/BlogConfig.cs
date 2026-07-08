@@ -71,21 +71,6 @@ namespace RaccoonBlog.Web.Models
         [Display(Name = "Posts On Page")]
         public int PostsOnPage { get; set; }
 
-        [Display(Name = "Reddit User")]
-        public string RedditUser { get; set; }
-
-        [Display(Name = "Reddit Password")]
-        public string RedditPassword { get; set; }
-
-        [Display(Name = "Reddit Client App ID")]
-        public string RedditClientAppId { get; set; }
-
-        [Display(Name = "Reddit Client Secret")]
-        public string RedditClientSecret { get; set; }
-
-        [Display(Name = "Reddit Subreddits To Submit To On Publish")]
-        public List<string> RedditSubredditsToSubmitToOnPublish { get; set; }
-
         [Display(Name = "Twitter Bearer Token")]
         public string TwitterBearerToken { get; set; }
 

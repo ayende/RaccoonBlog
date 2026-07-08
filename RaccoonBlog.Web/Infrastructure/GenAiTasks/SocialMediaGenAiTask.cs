@@ -37,20 +37,15 @@ namespace RaccoonBlog.Web.Infrastructure.GenAiTasks
                         1. Twitter: A concise, engaging tweet (max 250 characters, excluding URL which
                            will be appended automatically). Should hook technical readers. Include 1-2
                            relevant hashtags if natural. Do not include a URL.
-
-                        2. Reddit: A compelling submission title for a programming subreddit audience.
-                           Should be informative and spark discussion. No clickbait. Max 200 characters.
                         """,
                     SampleObject = """
                         {
-                            "TwitterText": "Concise engaging tweet text with #relevantHashtag",
-                            "RedditTitle": "Compelling Reddit submission title for technical audience"
+                            "TwitterText": "Concise engaging tweet text with #relevantHashtag"
                         }
                         """,
                     UpdateScript = """
                         this.Social = this.Social || {};
                         this.Social.TwitterText = $output.TwitterText;
-                        this.Social.RedditTitle = $output.RedditTitle;
                         this.Social.GeneratedAt = new Date().toISOString();
 
                         getMetadata(this)['@refresh'] = this.PublishAt;
