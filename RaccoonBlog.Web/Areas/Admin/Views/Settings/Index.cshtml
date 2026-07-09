@@ -42,20 +42,11 @@
     @Html.EditorFor(x => x.FuturePostsEncryptionSalt, "TextLong")
     <hr />
 
-    <h4>Social network integration</h4>
-    @Html.EditorFor(x => x.RedditUser, "TextLong")
-    @Html.EditorFor(x => x.RedditPassword, "TextLong")
-    <div class="form-group">
-        <label class="col-sm-5 col-md-4 col-lg-3 control-label">Subreddits to submit to on publish</label>
-        <div class="col-sm-7 col-md-8 col-lg-9">
-            <textarea name="redditSubredditsText" class="form-control" rows="4" placeholder="One subreddit per line, e.g. /r/programming">@(Model.RedditSubredditsToSubmitToOnPublish == null ? "" : string.Join("\n", Model.RedditSubredditsToSubmitToOnPublish))</textarea>
-            <span class="help-block">One subreddit per line.</span>
-        </div>
-    </div>
-    <hr />
-
     <h4>Twitter/X integration</h4>
-    @Html.EditorFor(x => x.TwitterBearerToken, "TextLong")
+    @Html.EditorFor(x => x.TwitterApiKey, "TextLong")
+    @Html.EditorFor(x => x.TwitterApiSecret, "TextLong")
+    @Html.EditorFor(x => x.TwitterAccessToken, "TextLong")
+    @Html.EditorFor(x => x.TwitterAccessTokenSecret, "TextLong")
     <hr />
 
     <div class="form-group">

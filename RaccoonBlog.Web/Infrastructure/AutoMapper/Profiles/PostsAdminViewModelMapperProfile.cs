@@ -39,7 +39,6 @@ namespace RaccoonBlog.Web.Infrastructure.AutoMapper.Profiles
 	            .ForMember(x => x.CommentsId, o => o.Ignore())
 	            .ForMember(x => x.LastEditedByUserId, o => o.Ignore())
 	            .ForMember(x => x.LastEditedAt, o => o.Ignore())
-	            .ForMember(x => x.Integration, o => o.Ignore())
             .ForMember(x => x.Social, o => o.Ignore())
 	            .ForMember(x => x.TagsAsSlugs, o => o.Ignore())
 	            .ForMember(x => x.Tags, o => o.MapFrom(m => TagsResolver.ResolveTagsInput(m.Tags)))
