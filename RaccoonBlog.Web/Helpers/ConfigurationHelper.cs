@@ -15,6 +15,6 @@ namespace RaccoonBlog.Web.Helpers
 			_configuration = configuration;
 		}
 
-		public static string MainBlogUrl => _configuration?["MainUrl"] ?? _configuration?["Raccoon:MainUrl"] ?? string.Empty;
+		public static string MainBlogUrl => _configuration?["AppSettings:MainUrl"] ?? _configuration?["MainUrl"] ?? _configuration?["Raccoon:MainUrl"] ?? string.Empty;
 	}
 }
