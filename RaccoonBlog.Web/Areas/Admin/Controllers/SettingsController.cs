@@ -3,7 +3,6 @@ using RaccoonBlog.Web.Areas.Admin.Models;
 using RaccoonBlog.Web.Areas.Admin.ViewModels;
 using RaccoonBlog.Web.Helpers;
 using RaccoonBlog.Web.Models;
-using RaccoonBlog.Web.Models.SocialNetwork;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Operations;
 using Raven.Client.Documents.Queries;
@@ -61,46 +60,6 @@ namespace RaccoonBlog.Web.Areas.Admin.Controllers
             {
                 AllowStale = false
             }));
-        }
-
-        [HttpGet]
-        public virtual async Task<IActionResult> RedditSubmission()
-        {
-            var model = await PrepareRedditManualSubmissionViewModel();
-            return View(model);
-        }
-
-        [HttpGet]
-        public virtual IActionResult SubmitToReddit(string postId, string sr)
-        {
-            var post = RavenSession.Load<Post>(postId);
-            var redditSubmitUrl = RedditHelper.SubmitUrl(sr, post);
-            var postSubmission = post.Integration.Reddit.GetPostSubmissionForSubreddit(sr);
-            postSubmission.Status = Reddit.SubmissionStatus.ManualSubmissionPending;
-            postSubmission.Attempts = 0;
-
-            RavenSession.SaveChanges();
-
-            return Redirect(redditSubmitUrl);
-        }
-
-        [HttpGet]
-        public virtual IActionResult ResetFailedRedditSubmission(string postId, string sr)
-        {
-            var post = RavenSession.Load<Post>(postId);
-            var postSubmission = post.Integration.Reddit.GetPostSubmissionForSubreddit(sr);
-            postSubmission.Status = null;
-            postSubmission.Attempts = 0;
-            RavenSession.SaveChanges();
-            return RedirectToAction("RedditSubmission");
-        }
-
-        private async Task<RedditManualSubmissionViewModel> PrepareRedditManualSubmissionViewModel()
-        {
-            var model = new RedditManualSubmissionViewModel();
-            model.SubredditsToSubmitTo = RedditHelper.ParseSubreddits(BlogConfig);
-            model.NotSubmittedPosts = RedditHelper.GetPostsForManualRedditSubmission(RavenSession, DateTimeOffset.UtcNow);
-            return model;
         }
 
         [HttpGet]

@@ -68,7 +68,6 @@ namespace RaccoonBlog.ImportFromSubtext
 				config.Subtitle = "Unnatural acts on source code";
 				config.Title = "Ayende @ Rahien";
 				config.Copyright = "Ayende Rahien";
-				config.AkismetKey = "43f0db211711";
 
 				s.Store(config);
 				s.SaveChanges();
@@ -180,7 +179,7 @@ namespace RaccoonBlog.ImportFromSubtext
 									Important = comment.IsBlogAuthor ?? false,
 									UserAgent = comment.UserAgent,
 									UserHostAddress = comment.IpAddress,
-									IsSpam = false,
+									SpamCheckStatus = SpamCheckStatus.Valid,
 									CommenterId = null,
 								}
 						).ToList();
@@ -199,7 +198,7 @@ namespace RaccoonBlog.ImportFromSubtext
 									Important = comment.IsBlogAuthor ?? false,
 									UserAgent = comment.UserAgent,
 									UserHostAddress = comment.IpAddress,
-									IsSpam = true,
+									SpamCheckStatus = SpamCheckStatus.Spam,
 									CommenterId = null,
 								}
 						).ToList();

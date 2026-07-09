@@ -20,7 +20,7 @@ namespace RaccoonBlog.Web.Infrastructure.Indexes
 		{
 		    Map = postComments => from postComment in postComments
 		        from comment in postComment.Comments
-		        where comment.IsSpam == false
+		        where comment.SpamCheckStatus != SpamCheckStatus.Pending
 		        select new
 		        {
 		            comment.CreatedAt,

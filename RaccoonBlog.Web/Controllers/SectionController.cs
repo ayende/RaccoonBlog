@@ -91,12 +91,6 @@ namespace RaccoonBlog.Web.Controllers
 		}
 
 		[ResponseCache(Duration = 3600)]
-		public virtual IActionResult ContactMe()
-		{
-			return View();
-		}
-		
-		[ResponseCache(Duration = 3600)]
 		public virtual IActionResult TagsList()
 		{
 			var mostRecentTag = new DateTimeOffset(DateTimeOffset.Now.Year - 2,

@@ -1,4 +1,3 @@
-using HibernatingRhinos.Loci.Common.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NLog;
@@ -7,7 +6,6 @@ using RaccoonBlog.Web.Infrastructure.AutoMapper;
 using RaccoonBlog.Web.Infrastructure.AutoMapper.Profiles.Resolvers;
 using RaccoonBlog.Web.Infrastructure.Common;
 using RaccoonBlog.Web.Infrastructure.Indexes;
-using RaccoonBlog.Web.Infrastructure.Tasks;
 using RaccoonBlog.Web.Models;
 using RaccoonBlog.Web.ViewModels;
 using Raven.Client.Documents;
@@ -59,12 +57,22 @@ namespace RaccoonBlog.Web.Controllers
                                       .ToList();
 
             var comments = RavenSession.Load<PostComments>(post.CommentsId) ?? new PostComments();
+
+            var currentCommenterId = GetCurrentCommenterId();
+            var isAuthenticated = User.Identity.IsAuthenticated;
+
+            var visibleComments = comments.Comments
+                .Where(c =>
+                    c.SpamCheckStatus != SpamCheckStatus.Pending ||
+                    isAuthenticated ||
+                    (!string.IsNullOrEmpty(currentCommenterId) && c.CommenterId == currentCommenterId))
+                .OrderBy(x => x.CreatedAt)
+                .MapTo<PostViewModel.Comment>();
+
             var vm = new PostViewModel
             {
                 Post = post.MapTo<PostViewModel.PostDetails>(),
-                Comments = comments.Comments
-                            .OrderBy(x => x.CreatedAt)
-                            .MapTo<PostViewModel.Comment>(),
+                Comments = visibleComments,
                 NextPost = RavenSession.GetNextPrevPost(post, true),
                 PreviousPost = RavenSession.GetNextPrevPost(post, false),
                 AreCommentsClosed = comments.AreCommentsClosed(post, BlogConfig.NumberOfDayToCloseComments),
@@ -154,12 +162,56 @@ namespace RaccoonBlog.Web.Controllers
             if (ModelState.IsValid == false)
                 return PostingCommentFailed(post, input, key);
 
-            // Pass IServiceProvider to AddCommentTask for DI access
-            TaskExecutor.ExcuteLater(new AddCommentTask(input, Request.MapTo<AddCommentTask.RequestValues>(), id, _serviceProvider));
+            // Silently reject comments from repeat spam offenders
+            // Show success to the user but don't actually save the comment
+            if (commenter != null && commenter.NumberOfSpamComments > 4 && !User.Identity.IsAuthenticated)
+            {
+                CommenterUtil.SetCommenterCookie(Response, input.CommenterKey);
+                return PostingCommentSucceeded(post, input);
+            }
+
+            // Create or update commenter. IsTrustedCommenter is intentionally left untouched:
+            // returning commenters keep their existing trust, new ones default to null (set later
+            // by the spam-filter task once a comment is confirmed valid). CommentInput has no
+            // IsTrustedCommenter member, so MapPropertiesToInstance will not overwrite it.
+            var newCommenter = commenter ?? new Commenter { Key = Guid.Parse(input.CommenterKey) };
+            input.MapPropertiesToInstance(newCommenter);
+            RavenSession.Store(newCommenter);
+
+            // Create comment inline with Pending status for GenAI spam check
+            var comment = new PostComments.Comment
+            {
+                Id = comments.GenerateNewCommentId(),
+                Author = input.Name,
+                Body = input.Body,
+                CreatedAt = DateTimeOffset.Now,
+                CommenterId = newCommenter.Id,
+                Email = input.Email,
+                Url = input.Url,
+                Important = User.Identity.IsAuthenticated,
+                UserHostAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                UserAgent = Request.Headers["User-Agent"].FirstOrDefault(),
+                SpamCheckStatus = SpamCheckStatus.Pending
+            };
+
+            comments.Comments.Add(comment);
+            post.CommentsCount = comments.Comments.Count;
+
+            RavenSession.SaveChanges();
 
             CommenterUtil.SetCommenterCookie(Response, input.CommenterKey);
 
             return PostingCommentSucceeded(post, input);
+        }
+
+        private string GetCurrentCommenterId()
+        {
+            if (Request.Cookies.TryGetValue(CommenterUtil.CommenterCookieName, out var cookieValue))
+            {
+                var commenter = RavenSession.GetCommenter(cookieValue);
+                return commenter?.Id;
+            }
+            return null;
         }
 
         private bool IsIpAddressBlocked()
@@ -226,7 +278,6 @@ namespace RaccoonBlog.Web.Controllers
                 var user = RavenSession.GetCurrentUser(User);
                 vm.Input = user.MapTo<CommentInput>();
                 vm.IsTrustedCommenter = true;
-                vm.IsLoggedInCommenter = true;
                 return;
             }
 
@@ -238,13 +289,10 @@ namespace RaccoonBlog.Web.Controllers
                 if (commenter == null)
                 {
                     _log.Debug("Could not find commenter for '" + CommenterUtil.CommenterCookieName + "': " + cookieValue);
-                    vm.IsLoggedInCommenter = false;
                     Response.Cookies.Delete(CommenterUtil.CommenterCookieName);
                     return;
                 }
 
-                vm.IsLoggedInCommenter = string.IsNullOrWhiteSpace(commenter.OpenId) == false;
-                _log.Debug("Commenter OpenId: " + commenter.OpenId);
                 vm.Input = commenter.MapTo<CommentInput>();
                 vm.IsTrustedCommenter = commenter.IsTrustedCommenter == true;
             }

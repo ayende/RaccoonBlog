@@ -25,18 +25,17 @@ using Microsoft.AspNetCore.Http;
 using RaccoonBlog.Web.Areas.Admin.Models;
 using Raven.Client.Documents.Commands.Batches;
 using Sparrow.Json;
+using SpamCheckStatus = RaccoonBlog.Web.Models.SpamCheckStatus;
 
 namespace RaccoonBlog.Web.Areas.Admin.Controllers
 {
 	public partial class PostsController : AdminController
 	{
-		private IAkismetService _akismetService;
 		private readonly MediaService _mediaService;
         private readonly CacheSignalService _cacheSignal;
-        public PostsController(IDocumentStore documentStore, IDocumentSession ravenSession, IAkismetService akismetService,  MediaService mediaService, CacheSignalService cacheSignal)
+        public PostsController(IDocumentStore documentStore, IDocumentSession ravenSession, MediaService mediaService, CacheSignalService cacheSignal)
         : base(documentStore, ravenSession)
         {
-            _akismetService = akismetService;
             _mediaService = mediaService;
 			_cacheSignal = cacheSignal;
         }
@@ -244,7 +243,8 @@ namespace RaccoonBlog.Web.Areas.Admin.Controllers
 					comments.Spam.RemoveAll(spams.Contains);
 					foreach (var comment in spams)
 					{
-                        _akismetService.MarkSpam(comment);
+						comment.SpamCheckStatus = SpamCheckStatus.Spam;
+						comments.Spam.Add(comment);
 					}
 					break;
 
@@ -254,16 +254,14 @@ namespace RaccoonBlog.Web.Areas.Admin.Controllers
 						.ToArray();
 
 					comments.Spam.RemoveAll(ham.Contains);
-					comments.Comments.AddRange(ham);
 
-					comments.Comments
-						.Where(c => c.IsSpam)
-						.ForEach(comment =>
-						         	{
-						         		comment.IsSpam = false;
-						         		_akismetService.MarkHam(comment);
-						         		ResetNumberOfSpamComments(comment);
-						         	});
+					foreach (var comment in ham)
+					{
+						comment.SpamCheckStatus = SpamCheckStatus.Valid;
+						ResetNumberOfSpamComments(comment);
+					}
+
+					comments.Comments.AddRange(ham);
 					break;
 				default:
 					throw new InvalidOperationException(command + " command is not recognized.");

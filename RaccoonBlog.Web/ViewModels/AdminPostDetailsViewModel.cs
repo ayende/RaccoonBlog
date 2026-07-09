@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Html;
+using RaccoonBlog.Web.Models;
 
 namespace RaccoonBlog.Web.ViewModels
 {
@@ -22,8 +23,8 @@ namespace RaccoonBlog.Web.ViewModels
 			public string Url { get; set; }    // Look for HTML injection.
 			public string EmailHash { get; set; }
 			public DateTimeOffset CreatedAt { get; set; }
-			public bool IsSpam { get; set; }
 			public bool IsImportant { get; set; }
+			public Models.SpamCheckStatus SpamCheckStatus { get; set; }
 		}
 
 		public class PostDetails
@@ -39,6 +40,10 @@ namespace RaccoonBlog.Web.ViewModels
 			public ICollection<string> Tags { get; set; }
 
 			public string Key { get; set; }
+
+			public string SeoMetaDescription { get; set; }
+			public ICollection<string> SeoKeywords { get; set; }
+			public DateTimeOffset? SeoLastAnalyzedAt { get; set; }
 		}
 	}
 }

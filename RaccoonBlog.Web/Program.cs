@@ -1,19 +1,11 @@
-﻿using AutoMapper;
-using FluentScheduler;
+﻿using FluentScheduler;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.Facebook;
-using Microsoft.AspNetCore.Authentication.Google;
-using Microsoft.AspNetCore.Authentication.MicrosoftAccount;
-using Microsoft.AspNetCore.Authentication.Twitter;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
-using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Mvc.ViewFeatures.Infrastructure;
-using Microsoft.AspNetCore.Rewrite;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -22,21 +14,19 @@ using NLog;
 using NLog.Web;
 using RaccoonBlog.Web.Helpers;
 using RaccoonBlog.Web.Helpers.Binders;
-using RaccoonBlog.Web.Infrastructure.AutoMapper;
 using RaccoonBlog.Web.Infrastructure.Configuration;
 using RaccoonBlog.Web.Infrastructure.DataProtection;
-using RaccoonBlog.Web.Infrastructure.Indexes;
 using RaccoonBlog.Web.Services;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Conventions;
-using Raven.Client.Documents.Indexes;
+using Raven.Client.Documents.Operations.AI.Agents;
+using RaccoonBlog.Web.Infrastructure.GenAiTasks;
 using Raven.Client.Documents.Session;
 using Raven.Client.Http;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
-using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using WilderMinds.MetaWeblog;
@@ -122,14 +112,12 @@ builder.Services.AddHttpClient<Recaptcha2Verifier>(client => {
 });
 builder.Services.AddScoped<Recaptcha2Helper>();
 builder.Services.AddScoped<RaccoonBlog.Web.Helpers.SignInHelper>();
-builder.Services.AddScoped<IAkismetService, AkismetService>();
 // Configure RavenDB DocumentStore
-var ravenUrls = builder.Configuration["Raven:Urls"]?.Split(',', StringSplitOptions.RemoveEmptyEntries) ?? new[] { "http://localhost:8080" };
+var ravenUrls = builder.Configuration["Raven:Urls"]?.Split(',', StringSplitOptions.RemoveEmptyEntries) ?? ["http://localhost:8080"];
 var ravenDatabase = builder.Configuration["Raven:Database"] ?? "blog.ayende.com";
 
 ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
 ServicePointManager.CheckCertificateRevocationList = false;
-ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
 
 var documentStore = new DocumentStore
 {
@@ -137,7 +125,10 @@ var documentStore = new DocumentStore
     Database = ravenDatabase,
     Conventions = new DocumentConventions
     {
-        AggressiveCache = { Mode = AggressiveCacheMode.TrackChanges }
+        AggressiveCache = { Mode = AggressiveCacheMode.TrackChanges },
+        FindCollectionName = type => type == typeof(RaccoonBlog.Web.Models.SendEmailCommand)
+            ? "EmailCommands"
+            : DocumentConventions.DefaultGetCollectionName(type)
     }
 };
 
@@ -156,7 +147,10 @@ if (int.TryParse(builder.Configuration["Raven:RequestsTimeoutInSec"], out int ti
 }
 
 documentStore.Initialize();
-HibernatingRhinos.Loci.Common.Tasks.TaskExecutor.DocumentStore = documentStore;
+
+// Configure GenAI tasks and subscriptions
+ConfigureRefreshAndGenAiTasks(documentStore, builder.Configuration);
+
 builder.Services.AddSingleton<IDocumentStore>(documentStore);
 
 builder.Services.AddDataProtection()
@@ -178,8 +172,8 @@ builder.Services.AddScoped<RaccoonBlog.Web.Models.BlogConfig>(ctx =>
     }
 });
 
-// Configure Authentication
-var authBuilder = builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+// Configure Authentication (cookie auth for the blog admin)
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
         options.Cookie.Path = "/blog";
@@ -188,51 +182,6 @@ var authBuilder = builder.Services.AddAuthentication(CookieAuthenticationDefault
         options.AccessDeniedPath = "/admin/login";
         options.LogoutPath = "/admin/login/logout";
     });
-
-// Only add OAuth providers if credentials are configured
-var googleClientId = builder.Configuration["Raccoon:OAuth:Google:ClientId"];
-var googleClientSecret = builder.Configuration["Raccoon:OAuth:Google:ClientSecret"];
-if (!string.IsNullOrEmpty(googleClientId) && !string.IsNullOrEmpty(googleClientSecret))
-{
-    authBuilder.AddGoogle(options =>
-    {
-        options.ClientId = googleClientId;
-        options.ClientSecret = googleClientSecret;
-    });
-}
-
-var microsoftClientId = builder.Configuration["Raccoon:OAuth:Microsoft:ClientId"];
-var microsoftClientSecret = builder.Configuration["Raccoon:OAuth:Microsoft:ClientSecret"];
-if (!string.IsNullOrEmpty(microsoftClientId) && !string.IsNullOrEmpty(microsoftClientSecret))
-{
-    authBuilder.AddMicrosoftAccount(options =>
-    {
-        options.ClientId = microsoftClientId;
-        options.ClientSecret = microsoftClientSecret;
-    });
-}
-
-var facebookAppId = builder.Configuration["Raccoon:OAuth:Facebook:AppId"];
-var facebookAppSecret = builder.Configuration["Raccoon:OAuth:Facebook:AppSecret"];
-if (!string.IsNullOrEmpty(facebookAppId) && !string.IsNullOrEmpty(facebookAppSecret))
-{
-    authBuilder.AddFacebook(options =>
-    {
-        options.AppId = facebookAppId;
-        options.AppSecret = facebookAppSecret;
-    });
-}
-
-var twitterConsumerKey = builder.Configuration["Raccoon:OAuth:Twitter:ConsumerKey"];
-var twitterConsumerSecret = builder.Configuration["Raccoon:OAuth:Twitter:ConsumerSecret"];
-if (!string.IsNullOrEmpty(twitterConsumerKey) && !string.IsNullOrEmpty(twitterConsumerSecret))
-{
-    authBuilder.AddTwitter(options =>
-    {
-        options.ConsumerKey = twitterConsumerKey;
-        options.ConsumerSecret = twitterConsumerSecret;
-    });
-}
 
 // Configure AutoMapper using modern DI pattern for AutoMapper 15.x
 // This automatically registers IMapper in DI and scans for profiles
@@ -245,7 +194,6 @@ builder.Services.AddAutoMapper(cfg =>
     cfg.AddProfile<RaccoonBlog.Web.Infrastructure.AutoMapper.Profiles.PostsViewModelMapperProfile>();
     cfg.AddProfile<RaccoonBlog.Web.Infrastructure.AutoMapper.Profiles.TagsListViewModelMapperProfile>();
     cfg.AddProfile<RaccoonBlog.Web.Infrastructure.AutoMapper.Profiles.SectionMapperProfile>();
-    cfg.AddProfile<RaccoonBlog.Web.Infrastructure.AutoMapper.Profiles.EmailViewModelMapperProfile>();
     cfg.AddProfile<RaccoonBlog.Web.Infrastructure.AutoMapper.Profiles.SeriesMapperProfile>();
     cfg.AddProfile<RaccoonBlog.Web.Infrastructure.AutoMapper.Profiles.UserAdminMapperProfile>();
     cfg.AddProfile<RaccoonBlog.Web.Infrastructure.AutoMapper.Profiles.PostsAdminViewModelMapperProfile>();
@@ -340,6 +288,37 @@ app.MapControllerRoute(
 app.UseMetaWeblog("/Services/MetaWeblogAPI.ashx");
     
 app.Run();
+
+static void ConfigureRefreshAndGenAiTasks(IDocumentStore store, Microsoft.Extensions.Configuration.IConfiguration configuration)
+{
+    var log = LogManager.GetCurrentClassLogger();
+
+    // Enable document refresh (needed for future post @refresh triggers)
+    try
+    {
+        var refreshConfig = new Raven.Client.Documents.Operations.Refresh.RefreshConfiguration
+        {
+            Disabled = false,
+            RefreshFrequencyInSec = 60,
+            MaxItemsToProcess = 500
+        };
+        store.Maintenance.Send(new Raven.Client.Documents.Operations.Refresh.ConfigureRefreshOperation(refreshConfig));
+        log.Info("Document refresh enabled.");
+    }
+    catch (Exception e)
+    {
+        log.Error(e, "Failed to configure refresh.");
+    }
+
+    // Register GenAI tasks (each in its own file under Infrastructure/GenAiTasks/)
+    SpamFilterGenAiTask.Register(store);
+    SeoAnalysisGenAiTask.Register(store);
+    SocialMediaGenAiTask.Register(store);
+
+    // Start subscription workers
+    RaccoonBlog.Web.Infrastructure.EmailSubscription.Start(store, configuration);
+    RaccoonBlog.Web.Infrastructure.SocialPostingSubscription.Start(store);
+}
 
 // Custom JSON TempData Serializer to replace BSON serializer
 public class JsonTempDataSerializer : TempDataSerializer

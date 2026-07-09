@@ -22,7 +22,6 @@ namespace RaccoonBlog.IntegrationTests.AutoMapper
 				cfg.AddProfile<PostsViewModelMapperProfile>();
 				cfg.AddProfile<TagsListViewModelMapperProfile>();
 				cfg.AddProfile<SectionMapperProfile>();
-				cfg.AddProfile<EmailViewModelMapperProfile>();
 				cfg.AddProfile<SeriesMapperProfile>();
 				cfg.AddProfile<UserAdminMapperProfile>();
 				cfg.AddProfile<PostsAdminViewModelMapperProfile>();
@@ -37,14 +36,6 @@ namespace RaccoonBlog.IntegrationTests.AutoMapper
 		public void AssertConfigurationIsValid()
 		{
 			_configuration.AssertConfigurationIsValid();
-		}
-
-		[Fact]
-		public void CanMapFromCommentToNewCommentViewModel()
-		{
-			var comment = new PostComments.Comment();
-			var ex = Record.Exception(() => comment.MapTo<NewCommentEmailViewModel>());
-			Assert.Null(ex);
 		}
 	}
 }

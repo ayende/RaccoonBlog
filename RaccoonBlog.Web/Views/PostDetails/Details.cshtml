@@ -1,4 +1,5 @@
 ﻿@using RaccoonBlog.Web.Infrastructure.Common
+@using RaccoonBlog.Web.Helpers
 @model PostViewModel
 @{
     string title = @Model.Post.Title;
@@ -13,10 +14,13 @@
 @section HeaderAdditions
 {
     @{
-        var description = PostHelper.GetMetaDescription(Model.Post.Body);
+        var description = Model.Post.SeoMetaDescription ?? PostHelper.GetMetaDescription(Model.Post.Body);
         var url = $"{Context.Request.Scheme}://{Context.Request.Host}{Context.Request.Path}{Context.Request.QueryString}";
     }
     <meta name="description" content="@description">
+    @if (Model.Post.SeoKeywords != null && Model.Post.SeoKeywords.Count > 0) {
+    <meta name="keywords" content="@string.Join(", ", Model.Post.SeoKeywords)">
+    }
 
     <meta property="og:site_name" content="@ViewBag.BlogConfig.Title">
     <meta property="og:type" content="website">
@@ -46,6 +50,7 @@
         }
 
         <link rel="canonical" href="@link">
+        @SeoHelper.RenderJsonLd(Model.Post, link)
     }
 }
 
@@ -87,15 +92,6 @@
         </div>
     </div>
     <div class="postData">
-        <a style='text-decoration:none;' href='@string.Format("http://twitter.com/intent/tweet?status={0}+{1} via @{2}", Model.Post.Title, currentUrl, Model.Post.Author.TwitterNick)'>
-            <span class="icomoon icon-twitter"></span><span>Tweet</span>
-        </a>
-        <a style='text-decoration:none;' type="icon_link" onclick="window.open('@string.Format("http://www.facebook.com/sharer/sharer.php?u={0}&title={1}", currentUrl, Model.Post.Title)','sharer','toolbar=0,status=0,width=580,height=325');" href="javascript: void(0)">
-            <span class="icomoon icon-facebook"></span><span>Share</span>
-        </a>
-        <a style='text-decoration:none;' type="icon_link" onclick="popUp=window.open('@string.Format("https://www.linkedin.com/shareArticle?mini=true&url={0}&title={1}", currentUrl, Model.Post.Title)', 'popupwindow', 'scrollbars=yes,width=600,height=400');popUp.focus();return false" href="javascript: void(0)">
-            <span class="icomoon icon-linkedin"></span><span>Share</span>
-        </a>
         <a href="#comments">
             <span class="icomoon-position glyphicon icon-comment" aria-hidden="true"></span><span>@Model.Comments.Count comments</span>
         </a>
@@ -136,7 +132,7 @@
                                 <div class="icomoon-position icon-tag" aria-hidden="true"></div>
                             </div>
                             @{
-                                var tagList = related.Tags.ToList();
+                                var tagList = related.Tags.Where(t => !t.StartsWith("@")).ToList();
                                 var maxTags = 3;
                             }
                             @for (int i = 0; i < tagList.Count; i++)
@@ -272,32 +268,6 @@
             <h3 style="float: left">
                 <a id="comments-form-location">Join the conversation...</a>
             </h3>
-            @*if (Model.IsLoggedInCommenter == false)
-            {
-                <div class="openAuth-wrapper">
-                    <span class="btn">Sign in with</span>
-                    <form action="@Url.Action("Login", "Social")" method="post">
-                        @Html.Hidden("redirectUrl", Url.RelativeToAbsolute((string)ViewBag.CurrentUrl + "#postComment"))
-                        @if (ConfigurationHelper.GoogleOAuthKeys != null)
-                        {
-                            <button type="submit" name="provider" value="Google" class="btn btn-default btn-google"><i class="icon-google"></i></button>
-                        }
-                        @if (ConfigurationHelper.MicrosoftOAuthKeys != null)
-                        {
-                            <button type="submit" name="provider" value="Microsoft" class="btn btn-default btn-ms"><i class="icon-windows"></i></button>
-                        }
-                        @if (ConfigurationHelper.FacebookOAuthKeys != null)
-                        {
-                            <button type="submit" name="provider" value="Facebook" class="btn btn-default btn-fb"><i class="icon-facebook"></i></button>
-                        }
-                        @if (ConfigurationHelper.TwitterOAuthKeys != null)
-                        {
-                            <button type="submit" name="provider" value="Twitter" class="btn btn-default btn-twitter"><i class="icon-twitter"></i></button>
-                        }
-
-                    </form>
-                </div>
-            }*@
             <div class="clearfix"></div>
             <div class="comment-form-wrapper">
                 @using (Html.BeginForm("Comment", "PostDetails", new { Model.Post.Id, key = Model.Post.ShowPostEvenIfPrivate }))

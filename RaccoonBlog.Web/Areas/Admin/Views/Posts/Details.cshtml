@@ -43,14 +43,32 @@
 		Published at <time pubdate>@Model.Post.PublishedAt.ToString("r")</time>
 
 		@if (Model.Post.PublishedAt != Model.Post.CreatedAt)
-		{ 
+		{
 			<span>
 			| Originally posted at <time>@Model.Post.CreatedAt.ToString("r")</time>
 			</span>
 		}
 	</footer>
 
-	
+	@if (Model.Post.SeoMetaDescription != null || (Model.Post.SeoKeywords != null && Model.Post.SeoKeywords.Count > 0))
+	{
+		<section class="seo-info" style="background-color: #f5f5f5; padding: 15px; margin: 15px 0; border: 1px solid #ddd;">
+			<h4>SEO Analysis</h4>
+			@if (!string.IsNullOrEmpty(Model.Post.SeoMetaDescription))
+			{
+				<p><strong>Meta Description:</strong> @Model.Post.SeoMetaDescription</p>
+			}
+			@if (Model.Post.SeoKeywords != null && Model.Post.SeoKeywords.Count > 0)
+			{
+				<p><strong>Keywords:</strong> @string.Join(", ", Model.Post.SeoKeywords)</p>
+			}
+			@if (Model.Post.SeoLastAnalyzedAt.HasValue)
+			{
+				<p><small>Last analyzed: @Model.Post.SeoLastAnalyzedAt.Value.ToString("r")</small></p>
+			}
+		</section>
+	}
+
 	<div class="tags">
 		<ul>
 			@foreach (var name in Model.Post.Tags) {
@@ -70,9 +88,17 @@
 		}
 		<form asp-action="CommentsAdmin" asp-controller="Posts" asp-area="Admin" asp-route-id="@Model.Post.Id" method="post">
 			@foreach (var comment in Model.Comments) {
-				<article class="comment @(comment.IsImportant ? " important" : null)@(comment.IsSpam ? " spam" : null)">
+				<article class="comment @(comment.IsImportant ? " important" : null)@(comment.SpamCheckStatus == RaccoonBlog.Web.Models.SpamCheckStatus.Spam ? " spam" : null)">
 					<a name="comment@(comment.Id)"></a>
 					<input type="checkbox" name="commentIds" value="@comment.Id">
+					@if (comment.SpamCheckStatus == RaccoonBlog.Web.Models.SpamCheckStatus.Pending)
+					{
+						<span class="label label-warning" style="background-color: #f0ad4e; color: white; padding: 2px 6px; font-size: 11px; border-radius: 3px;">PENDING</span>
+					}
+					else if (comment.SpamCheckStatus == RaccoonBlog.Web.Models.SpamCheckStatus.Spam)
+					{
+						<span class="label label-danger" style="background-color: #d9534f; color: white; padding: 2px 6px; font-size: 11px; border-radius: 3px;">SPAM</span>
+					}
 
 					<div class="avatar">
 						<img src="https://www.gravatar.com/avatar.php?gravatar_id=@(comment.EmailHash)&amp;size=50&amp;default=identicon" alt="Gravatar">

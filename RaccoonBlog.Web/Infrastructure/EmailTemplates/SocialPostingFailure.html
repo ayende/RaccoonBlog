@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+</head>
+<body style="margin:0;padding:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f4f4f4;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:20px 0;">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:4px;overflow:hidden;">
+  <tr>
+    <td style="background:#2c3e50;padding:20px 30px;">
+      <h1 style="margin:0;color:#ffffff;font-size:22px;">{{ blog_name }}</h1>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding:30px;">
+      <h2 style="margin:0 0 10px;color:#c0392b;font-size:18px;">Social posting to {{ network }} failed</h2>
+      <p style="margin:0 0 10px;color:#2c3e50;">
+        Post:
+        <a href="https://ayende.com/blog/{{ post_id | string.replace 'posts/' '' }}/{{ post_slug }}" style="color:#2980b9;text-decoration:none;">{{ post_title }}</a>
+      </p>
+      {{ if target }}
+      <p style="margin:0 0 10px;color:#7f8c8d;font-size:14px;">Target: {{ target }}</p>
+      {{ end }}
+      <hr style="border:none;border-top:1px solid #ecf0f1;margin:15px 0;" />
+      <p style="margin:0 0 8px;color:#7f8c8d;font-size:13px;">Error detail:</p>
+      <pre style="background:#f9f9f9;border-left:4px solid #c0392b;padding:15px;margin:0;color:#333;font-size:12px;line-height:1.5;white-space:pre-wrap;word-break:break-word;overflow-x:auto;">{{ error_message | html.escape }}</pre>
+    </td>
+  </tr>
+  <tr>
+    <td style="background:#ecf0f1;padding:15px 30px;text-align:center;font-size:12px;color:#95a5a6;">
+      {{ blog_name }} &mdash; Social Posting Failure
+    </td>
+  </tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>

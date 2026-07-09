@@ -9,6 +9,9 @@ namespace RaccoonBlog.Web.Infrastructure.AutoMapper.Profiles.Resolvers
 
 		public static string ResolveTags(ICollection<string> tags)
 		{
+			if (tags == null || tags.Count == 0)
+				return string.Empty;
+
 			return string.Join(TagsSeparator, tags);
 		}
 
