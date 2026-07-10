@@ -159,6 +159,8 @@ namespace RaccoonBlog.Web.Infrastructure
                 cmd.PostTitle,
                 cmd.PostId,
                 cmd.PostSlug,
+                comment_created_at = FormatTimestamp(cmd.CreatedAt),
+                post_publish_at = FormatTimestamp(cmd.PostPublishAt),
                 cmd.Key,
                 cmd.Network,
                 cmd.Target,
@@ -168,6 +170,14 @@ namespace RaccoonBlog.Web.Infrastructure
                 blog_name = blogName,
                 comment_count = cmd.SpamComments?.Count ?? 0
             });
+        }
+
+        private static string FormatTimestamp(DateTimeOffset? timestamp)
+        {
+            if (timestamp == null || timestamp.Value == default)
+                return "";
+
+            return timestamp.Value.ToString("dddd, MMMM d, yyyy h:mm tt");
         }
 
         private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, string> _templateCache = new();

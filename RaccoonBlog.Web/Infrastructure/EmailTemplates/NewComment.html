@@ -18,6 +18,9 @@
       <h2 style="margin:0 0 10px;color:#2c3e50;font-size:18px;">New Comment on:
         <a href="https://ayende.com/blog/{{ post_id | string.replace 'posts/' '' }}/{{ post_slug }}?key={{ key }}" style="color:#2980b9;text-decoration:none;">{{ post_title | html.escape }}</a>
       </h2>
+      {{ if post_publish_at }}
+      <p style="margin:0;color:#95a5a6;font-size:12px;">Posted {{ post_publish_at }}</p>
+      {{ end }}
       <hr style="border:none;border-top:1px solid #ecf0f1;margin:15px 0;" />
       <table cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:15px;">
         <tr>
@@ -32,6 +35,12 @@
         <tr>
           <td style="padding:5px 0;color:#7f8c8d;vertical-align:top;">URL:</td>
           <td style="padding:5px 0;"><a href="{{ comment_url | html.escape }}" style="color:#2980b9;">{{ comment_url | html.escape }}</a></td>
+        </tr>
+        {{ end }}
+        {{ if comment_created_at }}
+        <tr>
+          <td style="padding:5px 0;color:#7f8c8d;vertical-align:top;">Posted:</td>
+          <td style="padding:5px 0;color:#2c3e50;">{{ comment_created_at }}</td>
         </tr>
         {{ end }}
       </table>

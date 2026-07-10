@@ -23,8 +23,10 @@ namespace RaccoonBlog.Web.Infrastructure.GenAiTasks
                     {
                         Script = """
                             const post = load(this.Post.Id);
+                            const cutoff = new Date();
+                            cutoff.setMonth(cutoff.getMonth() - 3);
                             for(const comment of this.Comments) {
-                                if(comment.SpamCheckStatus !== 'Pending')
+                                if(comment.SpamCheckStatus !== 'Pending' || new Date(comment.CreatedAt) < cutoff)
                                     continue;
 
                                 ai.genContext({
@@ -182,13 +184,14 @@ namespace RaccoonBlog.Web.Infrastructure.GenAiTasks
                                 CommentBody: $input.Body || '',
                                 CommentEmail: $input.Email || '',
                                 CommentUrl: $input.Url || '',
-                                CreatedAt: new Date().toISOString(),
+                                CreatedAt: $input.CreatedAt || new Date().toISOString(),
                                 IpAddress: $input.UserHostAddress || '',
                                 UserAgent: $input.UserAgent || '',
                                 CommenterId: $input.CommenterId || '',
                                 PostId: this.Post.Id || '',
                                 PostTitle: postTitle,
                                 PostSlug: postSlug,
+                                PostPublishAt: post ? post.PublishAt : null,
                                 Key: post ? post.ShowPostEvenIfPrivate : '',
                                 '@metadata': { '@collection': 'EmailCommands' }
                             };

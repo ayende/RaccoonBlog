@@ -26,6 +26,7 @@ namespace RaccoonBlog.Web.Models
         public string PostId { get; set; }
         public string PostTitle { get; set; }
         public string PostSlug { get; set; }
+        public DateTimeOffset? PostPublishAt { get; set; }
         public string BlogName { get; set; }
         public string Key { get; set; }
 
