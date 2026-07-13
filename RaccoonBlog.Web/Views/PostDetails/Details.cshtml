@@ -16,6 +16,7 @@
     @{
         var description = Model.Post.SeoMetaDescription ?? PostHelper.GetMetaDescription(Model.Post.Body);
         var url = $"{Context.Request.Scheme}://{Context.Request.Host}{Context.Request.Path}{Context.Request.QueryString}";
+        var ogImage = $"{Context.Request.Scheme}://{Context.Request.Host}{Url.Content("~/images/android-chrome-512x512.png")}";
     }
     <meta name="description" content="@description">
     @if (Model.Post.SeoKeywords != null && Model.Post.SeoKeywords.Count > 0) {
@@ -27,6 +28,7 @@
     <meta property="og:title" content="@title">
     <meta property="og:description" content="@description">
     <meta property="og:url" content="@url">
+    <meta property="og:image" content="@ogImage">
 
     <meta name="twitter:card" content="summary">
     <meta name="twitter:creator" content="@("@")@ViewBag.BlogConfig.TwitterLogin">
@@ -34,6 +36,7 @@
     <meta name="twitter:title" content="@title">
     <meta name="twitter:description" content="@description">
     <meta name="twitter:url" content="@url">
+    <meta name="twitter:image" content="@ogImage">
 
     @{
         var tags = Model.Post.Tags.Select(tag => tag.Name);
