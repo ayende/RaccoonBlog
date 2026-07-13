@@ -10,6 +10,7 @@
         var title = ViewBag.BlogConfig.Title;
         var url = $"{Context.Request.Scheme}://{Context.Request.Host}{Context.Request.Path}{Context.Request.QueryString}";
         var description = "OREN EINI aka Ayende Rahien CEO of RAVENDB LTD, which develops RAVENDB, a NoSQL Open Source Document Database.";
+        var ogImage = $"{Context.Request.Scheme}://{Context.Request.Host}{Url.Content("~/images/android-chrome-512x512.png")}";
     }
 
     <meta property="og:site_name" content="@title">
@@ -17,6 +18,7 @@
     <meta property="og:title" content="@title">
     <meta property="og:description" content="@description">
     <meta property="og:url" content="@url">
+    <meta property="og:image" content="@ogImage">
 
     <meta name="twitter:card" content="summary">
     <meta name="twitter:creator" content="@("@")@ViewBag.BlogConfig.TwitterLogin">
@@ -24,6 +26,7 @@
     <meta name="twitter:title" content="@title">
     <meta name="twitter:description" content="@description">
     <meta name="twitter:url" content="@url">
+    <meta name="twitter:image" content="@ogImage">
 }
 
 <div class="postsList">
