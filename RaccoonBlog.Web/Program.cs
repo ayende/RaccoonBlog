@@ -310,6 +310,16 @@ static void ConfigureRefreshAndGenAiTasks(IDocumentStore store, Microsoft.Extens
         log.Error(e, "Failed to configure refresh.");
     }
 
+    var enableBackgroundTasks = true;
+    if (bool.TryParse(configuration["AppSettings:EnableBackgroundTasks"], out var backgroundTasksFlag))
+        enableBackgroundTasks = backgroundTasksFlag;
+
+    if (!enableBackgroundTasks)
+    {
+        log.Info("Background tasks disabled (AppSettings:EnableBackgroundTasks=false); skipping GenAI task registration and subscription workers.");
+        return;
+    }
+
     // Register GenAI tasks (each in its own file under Infrastructure/GenAiTasks/)
     SpamFilterGenAiTask.Register(store);
     SeoAnalysisGenAiTask.Register(store);
