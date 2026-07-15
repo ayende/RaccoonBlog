@@ -62,7 +62,7 @@
             <a href="https://ayende.com/blog/{{ post_id | string.replace 'posts/' '' }}/{{ post_slug }}?key={{ key }}#comments" style="display:inline-block;padding:8px 16px;background:#2980b9;color:#ffffff;text-decoration:none;border-radius:3px;font-size:13px;">View Comment</a>
           </td>
           <td style="padding-right:10px;">
-            <a href="https://ayende.com/blog/admin/comments" style="display:inline-block;padding:8px 16px;background:#2c3e50;color:#ffffff;text-decoration:none;border-radius:3px;font-size:13px;">Admin</a>
+            <a href="https://ayende.com/blog/admin/posts/details/{{ post_id | string.replace 'posts/' '' }}#comment{{ comment_id }}" style="display:inline-block;padding:8px 16px;background:#2c3e50;color:#ffffff;text-decoration:none;border-radius:3px;font-size:13px;">Admin</a>
           </td>
           {{ if ip_address }}
           <td>

@@ -110,6 +110,12 @@
                     <div class="comment_body">
                         <p>@comment.Body</p>
                     </div>
+					@if (comment.SpamCheckStatus == RaccoonBlog.Web.Models.SpamCheckStatus.Spam && !string.IsNullOrEmpty(comment.Reason))
+					{
+						<div class="spam_reason" style="margin-top:8px;padding:8px 12px;background:#fdf0ef;border-left:3px solid #d9534f;color:#a94442;font-size:13px;">
+							<strong>Flagged as spam:</strong> @comment.Reason
+						</div>
+					}
 				</article>
 			}
 			<div id="comments-admin">

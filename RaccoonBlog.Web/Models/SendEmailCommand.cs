@@ -45,6 +45,7 @@ namespace RaccoonBlog.Web.Models
         public string Body { get; set; }
         public string PostId { get; set; }
         public string PostTitle { get; set; }
+        public string Reason { get; set; }
         public DateTimeOffset Timestamp { get; set; }
     }
 }

@@ -25,11 +25,17 @@
           {{ if entry.post_title }}<span style="font-weight:normal;color:#7f8c8d;font-size:12px;"> on {{ entry.post_title | html.escape }}</span>{{ end }}
         </p>
         <p style="margin:0;color:#555;font-size:13px;line-height:1.5;">{{ entry.body | string.truncate 200 | html.escape }}</p>
+        {{ if entry.reason }}
+        <p style="margin:8px 0 0;color:#c0392b;font-size:12px;line-height:1.5;"><strong>Flagged as spam:</strong> {{ entry.reason | html.escape }}</p>
+        {{ end }}
+        <p style="margin:10px 0 0;">
+          <a href="https://ayende.com/blog/admin/posts/details/{{ entry.post_id | string.replace 'posts/' '' }}#comment{{ entry.comment_id }}" style="color:#2980b9;font-size:12px;text-decoration:none;">Review on admin page &rarr;</a>
+        </p>
       </div>
       {{ end }}
       {{ end }}
       <hr style="border:none;border-top:1px solid #ecf0f1;margin:20px 0 15px;" />
-      <a href="https://ayende.com/blog/admin/comments" style="display:inline-block;padding:10px 20px;background:#2c3e50;color:#ffffff;text-decoration:none;border-radius:3px;font-size:13px;">Manage Spam</a>
+      <a href="https://ayende.com/blog/admin/posts" style="display:inline-block;padding:10px 20px;background:#2c3e50;color:#ffffff;text-decoration:none;border-radius:3px;font-size:13px;">Manage Spam</a>
     </td>
   </tr>
   <tr>

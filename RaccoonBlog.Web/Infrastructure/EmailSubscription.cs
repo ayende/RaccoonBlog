@@ -159,6 +159,7 @@ namespace RaccoonBlog.Web.Infrastructure
                 cmd.PostTitle,
                 cmd.PostId,
                 cmd.PostSlug,
+                comment_id = cmd.CommentId,
                 comment_created_at = FormatTimestamp(cmd.CreatedAt),
                 post_publish_at = FormatTimestamp(cmd.PostPublishAt),
                 cmd.Key,

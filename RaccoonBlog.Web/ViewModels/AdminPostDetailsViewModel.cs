@@ -25,6 +25,7 @@ namespace RaccoonBlog.Web.ViewModels
 			public DateTimeOffset CreatedAt { get; set; }
 			public bool IsImportant { get; set; }
 			public Models.SpamCheckStatus SpamCheckStatus { get; set; }
+			public string Reason { get; set; }
 		}
 
 		public class PostDetails

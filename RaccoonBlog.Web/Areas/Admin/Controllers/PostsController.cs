@@ -258,6 +258,7 @@ namespace RaccoonBlog.Web.Areas.Admin.Controllers
 					foreach (var comment in ham)
 					{
 						comment.SpamCheckStatus = SpamCheckStatus.Valid;
+						comment.Reason = null;
 						ResetNumberOfSpamComments(comment);
 					}
 
