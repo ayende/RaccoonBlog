@@ -233,11 +233,12 @@ else
 
 app.Use(async (context, next) =>
 {
-    var path = context.Request.Path.Value;
+    var path = context.Request.Path.Value ?? string.Empty;
 
     if (!path.StartsWith("/blog", StringComparison.OrdinalIgnoreCase))
     {
-        var newPath = "/blog" + (path.EndsWith("/") ? path : path + "/");
+        var encoded = context.Request.Path.ToUriComponent();
+        var newPath = "/blog" + (encoded.EndsWith("/") ? encoded : encoded + "/");
         context.Response.Redirect(newPath);
         return;
     }

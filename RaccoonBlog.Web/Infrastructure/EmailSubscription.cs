@@ -36,7 +36,11 @@ namespace RaccoonBlog.Web.Infrastructure
                     try
                     {
                         EnsureSubscriptionExists(store);
-                        var worker = store.Subscriptions.GetSubscriptionWorker<SendEmailCommand>(SubscriptionName);
+                        var worker = store.Subscriptions.GetSubscriptionWorker<SendEmailCommand>(
+                            new SubscriptionWorkerOptions(SubscriptionName)
+                            {
+                                Strategy = SubscriptionOpeningStrategy.WaitForFree
+                            });
 
                         worker.AfterAcknowledgment += _ =>
                         {
