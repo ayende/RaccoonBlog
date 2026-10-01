@@ -49,7 +49,8 @@ builder.Services.AddControllersWithViews(options =>
     options.ModelBinderProviders.Insert(0, new GuidBinderProvider());
     options.ModelBinderProviders.Insert(0, new RemoveSpacesEnumBinderProvider());
 })
-.AddNewtonsoftJson();
+.AddNewtonsoftJson()
+.AddSessionStateTempDataProvider();
 builder.Services.AddScoped<MediaService>();
 builder.Services.AddSingleton<BannerService>();
 builder.Services.AddMetaWeblog<MetaWeblogService>();
