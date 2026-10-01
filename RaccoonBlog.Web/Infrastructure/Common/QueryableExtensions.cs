@@ -8,8 +8,9 @@ namespace RaccoonBlog.Web.Infrastructure.Common
 	{
 		public static IQueryable<T> Paging<T>(this IQueryable<T> query, int currentPage, int defaultPage, int pageSize)
 		{
+			var skip = Math.Max(0L, (long)(currentPage - defaultPage) * pageSize);
 			return query
-				.Skip((currentPage - defaultPage)*pageSize)
+				.Skip((int)Math.Min(skip, int.MaxValue))
 				.Take(pageSize);
 		}
 
