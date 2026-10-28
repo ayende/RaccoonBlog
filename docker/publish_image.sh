@@ -26,7 +26,7 @@ else
 fi
 
 echo "Build Docker image"
-docker build --progress=plain -f docker/Dockerfile -t "${APP_IMAGE_LOCAL}" .
+docker build --pull --progress=plain -f docker/Dockerfile -t "${APP_IMAGE_LOCAL}" .
 
 echo "Login into Docker repo - ${ENV_NAME}"
 aws ecr get-login-password --region "${AWS_REGION}" \
