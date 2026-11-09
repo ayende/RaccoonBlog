@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 ENV DOTNET_CLI_TELEMETRY_OPTOUT=1 \
@@ -14,13 +14,13 @@ COPY . .
 
 RUN dotnet publish RaccoonBlog.Web/RaccoonBlog.Web.csproj -c Release -o /app/publish /p:UseAppHost=false
 
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 
 ENV DOTNET_CLI_TELEMETRY_OPTOUT=1 \
     ASPNETCORE_ENVIRONMENT=Production
 
-RUN addgroup --system --gid 10001 appgroup && adduser --system --uid 10001 --ingroup appgroup appuser
+RUN groupadd --system --gid 10001 appgroup && useradd --system --uid 10001 --gid appgroup appuser
 
 COPY --from=build /app/publish ./
 COPY --from=build /src/RaccoonBlog.Web/NLog.config ./NLog.config

@@ -34,5 +34,3 @@ jobs:
 
     - name: Run Tests
       run: dotnet test --no-build --configuration Release --verbosity normal
-      env:
-        RAVEN_TARGET_FRAMEWORK: 'net10.0'
