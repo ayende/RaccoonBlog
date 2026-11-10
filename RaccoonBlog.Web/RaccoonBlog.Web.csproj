@@ -66,16 +66,8 @@
     <PackageReference Include="FluentScheduler" Version="5.3.0" />
     <PackageReference Include="HtmlAgilityPack" Version="1.6.16" />
     <PackageReference Include="JetBrains.Annotations" Version="11.1.0" />
-    <PackageReference Include="Lambda2Js.Signed" Version="3.1.4" />
-    <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="10.0.14" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="10.0.14" />
-    <PackageReference Include="Microsoft.Bcl.HashCode" Version="6.0.0" />
-    <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="3.0.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageReference Include="Nito.AsyncEx.Coordination" Version="5.1.2" />
-    <PackageReference Include="Nito.AsyncEx.Tasks" Version="5.1.2" />
-    <PackageReference Include="Nito.Collections.Deque" Version="1.1.1" />
-    <PackageReference Include="Nito.Disposables" Version="2.2.1" />
     <PackageReference Include="snipervld.WebOptimizer.Dotless" Version="3.3.0" />
     
     <!-- Updated security-vulnerable packages -->
@@ -89,10 +81,17 @@
     <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
 
     <PackageReference Include="Scriban" Version="7.6.1" />
+    <!-- RavenDB.Client brings Lambda2Js.Signed, Microsoft.IO.RecyclableMemoryStream,
+         Nito.AsyncEx.Coordination and Microsoft.AspNetCore.JsonPatch transitively.
+         Do not list them here: a direct reference wins version resolution and would
+         silently pin what RavenDB asked for. -->
     <PackageReference Include="RavenDB.Client" Version="7.2.1" />
     <PackageReference Include="WilderMinds.MetaWeblog" Version="5.1.3" />
 
-    <!-- Pin transitive dependencies to fix known vulnerabilities -->
+    <!-- Held above the 4.5.0 that snipervld.dotless.Core 1.6.7.1 asks for, which has a
+         critical advisory (GHSA-rxg9-xrhp-64gj). This reference is load-bearing: drop it
+         and the graph falls back to 4.5.0 and the build reports NU1904. Nothing in this
+         project uses System.Drawing directly. -->
     <PackageReference Include="System.Drawing.Common" Version="4.7.2" />
   </ItemGroup>
 
