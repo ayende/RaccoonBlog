@@ -29,19 +29,18 @@
     
     <!-- Keep compatible packages -->
     <PackageReference Include="AutoMapper" Version="15.1.1" />
-    <PackageReference Include="HtmlAgilityPack" Version="1.6.16" />
-    <PackageReference Include="RavenDB.Client" Version="7.2.1" />
-    <PackageReference Include="RavenDB.Embedded" Version="7.2.1" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.13.1" />
+    <PackageReference Include="RavenDB.Client" Version="7.2.7" />
+    <PackageReference Include="RavenDB.Embedded" Version="7.2.7" />
     
-    <!-- xunit -->
-    <PackageReference Include="xunit" Version="2.9.2" />
-    <PackageReference Include="xunit.analyzers" Version="1.16.0" />
+    <!-- xunit pulls xunit.analyzers itself; pinning it directly caused NU1605 -->
+    <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     
     <!-- Replace RhinoMocks with Moq -->
-    <PackageReference Include="Moq" Version="4.20.70" />
+    <PackageReference Include="Moq" Version="4.21.0" />
   </ItemGroup>
 </Project>
