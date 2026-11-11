@@ -26,14 +26,18 @@ namespace RaccoonBlog.Web.Controllers
             RavenSession = ravenSession;
         }
 
-        protected StatusCodeResult HttpNotModified()
+        protected StatusCodeResult HttpNotModified(string etag = null, DateTimeOffset? lastModified = null)
         {
+            if (etag != null)
+                Response.Headers["ETag"] = etag;
+            if (lastModified.HasValue)
+                Response.Headers["Last-Modified"] = lastModified.Value.ToString("R");
             return StatusCode(304);
         }
 
-        protected IActionResult Xml(XDocument xml, string etag)
+        protected IActionResult Xml(XDocument xml, string etag, DateTimeOffset? lastModified = null)
         {
-            return new XmlResult(xml, etag);
+            return new XmlResult(xml, etag, lastModified);
         }
 
         public const int DefaultPage = 1;
